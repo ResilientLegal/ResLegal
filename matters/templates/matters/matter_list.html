@@ -1,0 +1,91 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Matters - ResLegal</title>
+    <link rel="stylesheet" href="{% static 'matters/matters.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-bg">
+        <div class="activities-card">
+            <div class="activities-header">
+                <h2>Activities</h2>
+            </div>
+
+            <div class="activities-filters">
+                <button class="filter-tab active">
+                    <span>All</span>
+                    <span class="filter-count">{{ summary.all }}</span>
+                </button>
+                <button class="filter-tab">
+                    <span>Completed</span>
+                    <span class="filter-count">{{ summary.completed }}</span>
+                </button>
+                <button class="filter-tab">
+                    <span>Not Completed</span>
+                    <span class="filter-count">{{ summary.not_completed }}</span>
+                </button>
+                <button class="filter-tab overdue-tab">
+                    <span>Overdue</span>
+                    <span class="filter-count">{{ summary.overdue }}</span>
+                </button>
+            </div>
+
+            <div class="activities-search-row">
+                <input
+                    type="text"
+                    class="activities-search-input"
+                    placeholder="Search Activities ..."
+                    disabled
+                />
+            </div>
+
+            <div class="activities-table-wrapper">
+                <table class="activities-table">
+                    <thead>
+                        <tr>
+                            <th class="col-checkbox">
+                                <input type="checkbox" disabled>
+                            </th>
+                            <th>Activity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Assigned To</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in matters %}
+                        <tr>
+                            <td class="col-checkbox">
+                                <input type="checkbox">
+                            </td>
+                            <td class="col-activity">{{ m.activity }}</td>
+                            <td class="col-date">{{ m.date }}</td>
+                            <td class="col-status">
+                                {% if m.status == "Completed" %}
+                                    <span class="status-pill status-completed">Completed</span>
+                                {% elif m.status == "In Progress" %}
+                                    <span class="status-pill status-in-progress">In Progress</span>
+                                {% elif m.status == "Overdue" %}
+                                    <span class="status-pill status-overdue">Overdue</span>
+                                {% else %}
+                                    <span class="status-pill">{{ m.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-assignee">
+                                <a href="#" class="assignee-link">{{ m.assignee }}</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
