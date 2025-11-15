@@ -1,0 +1,60 @@
+/* Replicated styles from backend template (light adaptation for React app) */
+:root{
+  --bg: #f7fafc;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --danger: #ef4444;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+.page-bg{
+  min-height:100vh;
+  background: var(--bg);
+  padding: 40px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.activities-card{
+  width:900px;
+  background: var(--card);
+  border-radius:12px;
+  box-shadow: 0 6px 20px rgba(15,23,42,0.06);
+  padding:20px;
+}
+
+.activities-header h2{margin:0 0 12px 0; font-size:20px}
+
+.activities-filters{display:flex; gap:8px; margin-bottom:12px}
+.filter-tab{
+  background:transparent; border:1px solid rgba(15,23,42,0.06); padding:8px 12px; border-radius:8px; display:flex; gap:8px; align-items:center; cursor:pointer; color:var(--muted);
+}
+.filter-tab.active{ background: rgba(37,99,235,0.08); color:var(--accent); border-color: rgba(37,99,235,0.12)}
+.filter-count{font-weight:600; margin-left:6px}
+.overdue-tab{ color: var(--danger)}
+
+.activities-search-row{ margin: 12px 0}
+.activities-search-input{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6}
+
+.activities-table-wrapper{ margin-top:8px; overflow:auto}
+.activities-table{ width:100%; border-collapse:collapse}
+.activities-table th, .activities-table td{ text-align:left; padding:12px 8px; border-bottom:1px solid #f1f5f9}
+.col-checkbox{ width:40px}
+.col-activity{ width:40%}
+.col-date{ width:15%}
+.col-status{ width:15%}
+.col-assignee{ width:20%}
+
+.status-pill{ padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px}
+.status-completed{ background:#ecfccb; color:#166534}
+.status-in-progress{ background:#e0f2fe; color:#0369a1}
+.status-overdue{ background:#fee2e2; color:#991b1b}
+
+.assignee-link{ color:var(--accent); text-decoration:none }
+.assignee-link:hover{ text-decoration:underline }
+
+@media (max-width: 980px){
+  .activities-card{ width:calc(100% - 48px) }
+}
