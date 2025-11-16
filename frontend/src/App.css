@@ -1,7 +1,7 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  width: 100%;
+  margin: 0;
+  padding-left: 100px;
   text-align: center;
 }
 
@@ -10,7 +10,7 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background: white;
+  background-color: white;
 }
 
 .app-content {

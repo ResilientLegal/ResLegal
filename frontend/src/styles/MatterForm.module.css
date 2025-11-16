@@ -1,0 +1,268 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-gray-bg: #f3f4f6;
+    --color-white: #ffffff;
+    --color-border: #9ca3af;
+    --color-border-light: #e5e7eb;
+    --color-text-dark: #1f2937;
+    --color-text-medium: #4b5563;
+    --color-text-light: #6b7280;
+    --color-read-only-bg: #f9fafb;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    color: var(--color-text-dark);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.appContainer {
+    width: 100%;
+    min-height: 100vh;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.formCard {
+    margin: 0 auto;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--color-border-light);
+}
+
+@media (min-width: 640px) {
+
+    .appContainer {
+        padding: 2rem;
+    }
+
+    .formCard {
+        padding: 2rem;
+    }
+}
+
+.headerTitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border-light);
+    padding-bottom: 1rem;
+    color: var(--color-text-dark);
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+
+    .formGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.inputLabel {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-medium);
+    text-align: left;
+}
+
+.inputRequired {
+    color: #ef4444;
+    margin-left: 0.25rem;
+}
+
+.inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-white);
+    transition: all 150ms ease-in-out;
+}
+
+.inputWrapper:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.inputWrapper.readOnly {
+    background-color: var(--color-read-only-bg);
+    border-color: #d1d5db;
+}
+
+.inputField,
+.formSelect {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-text-dark);
+    outline: none;
+    border: none;
+    background-color: transparent;
+    border-radius: 0.5rem;
+    transition: all 150ms ease-in-out;
+}
+
+.inputField.iconPresent {
+    padding-right: 2.5rem;
+}
+
+.readOnly .inputField {
+    cursor: default;
+}
+
+.inputIcon {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-light);
+    cursor: pointer;
+    transition: color 150ms ease-in-out;
+}
+
+.inputIcon:hover {
+    color: var(--color-primary);
+}
+
+.selectWrapper {
+    position: relative;
+}
+
+.formSelect {
+    appearance: none;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    padding-right: 2rem;
+    background-color: var(--color-white);
+}
+
+.selectArrow {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--color-text-light);
+}
+
+.notesTextarea {
+    resize: vertical;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    color: var(--color-text-dark);
+    outline: none;
+    transition: all 150ms ease-in-out;
+}
+
+.notesTextarea:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.dropArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    border: 2px dashed var(--color-dashed-border);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: border-color 200ms ease-in-out, background-color 200ms ease-in-out;
+}
+
+.dropArea:hover {
+    border-color: var(--color-primary);
+}
+
+.dropIcon {
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+}
+
+.dropText {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text-dark);
+    margin-bottom: 0.25rem;
+}
+
+.dropSubtext {
+    font-size: 0.875rem;
+    color: var(--color-text-medium);
+}
+
+.dropBrowse {
+    color: var(--color-primary);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.dropBrowse:hover {
+    text-decoration: underline;
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-light);
+}
+
+.buttonBase {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 150ms ease-in-out;
+}
+
+.buttonCancel {
+    background-color: #e5e7eb;
+    color: var(--color-text-medium);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.buttonCancel:hover {
+    background-color: #d1d5db;
+}
+
+.buttonSave {
+    background-color: var(--color-primary);
+    color: var(--color-white);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+}
+
+.buttonSave:hover {
+    background-color: var(--color-primary-hover);
+}
