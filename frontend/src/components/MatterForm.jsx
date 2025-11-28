@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload } from 'react-icons/tb';
 import styles from '../styles/MatterForm.module.css'
+import DJANGO_PORT from '../services/setting.js';
 
-const types = ['Civil', 'Criminal', 'Family Law', 'Appeals', 'Probate', 'Small Claims'];
-const states = ['New', 'In Progress', 'On Hold', 'Resolved', 'Closed'];
+const types = ['Civil', 'Criminal', 'Family Law', 'Appeal', 'Probate', 'Small Claims'];
+const states = ['In Progress', 'Pending Approval', 'Approved'];
+const type_labels = {
+  'CIVIL': 'Civil',
+  'CRIMINAL': 'Criminal',
+  'FAMILY_LAW': 'Family Law',
+  'APPEAL': 'Appeal',
+  'PROBATE': 'Probate',
+  'SMALL_CLAIMS': 'Small Claims',
+}
 
 const FormInput = ({ label, value, onChange, required, readOnly = false, icon }) => {
   const inputName = label.toLowerCase().replace(/\s/g, '');
@@ -112,39 +122,67 @@ const DragAndDropArea = () => {
     );
 };
 
+
+
 const App = () => {
-  const [formData, setFormData] = useState({
-    number: 'MS0000002',
-    openedFor: 'Adela Cerveantzs',
-    type: 'Chat',
-    assignedTo: 'Antony Alldis',
-    state: 'New',
-    shortDescription: 'DUI case california',
-    workNotes: '',
-  });
+  const { id } = useParams();
+  const [formData, setFormData] = useState();
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleSave = (data) => {
+    fetch(`${DJANGO_PORT}/api/matters/${id}/`, {
+      method: 'PUT',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    })
+    .then(res => console.log(res))
+    .catch(error => console.error("Error:", error));
+}
+
+  useEffect(() => {
+    fetch(`${DJANGO_PORT}/api/matters/${id}`)
+      .then(response => response.json())
+      .then(data => {
+        setFormData({
+          title: data.title || '',
+          client: data.client || '',
+          type: data.type || types[0],
+          assignee: data.assignee || '',
+          state: data.state || states[0],
+          shortDescription: data.shortDescription || '',
+          work_notes: data.work_notes || '',
+        });
+      })
+      .catch(error => console.error("Error:", error))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  if (isLoading) {
+      return <div>Loading data...</div>;
+  }
+
   return (
     <>
       <div className={styles.appContainer}>
         <div className={styles.formCard}>
-          <h1 className={styles.headerTitle}>Matter Record: {formData.number}</h1>
+          <h1 className={styles.headerTitle}>Matter Record: {formData.title}</h1>
 
           <div className={styles.formGrid}>
             <FormInput
-              label="Number"
-              value={formData.number}
-              readOnly
+              label="Title"
+              value={formData.title}
+              onChange={(e) => handleChange({ target: { name: 'title', value: e.target.value } })}
             />
 
             <FormInput
               label="Opened for"
-              value={formData.openedFor}
-              onChange={(e) => handleChange({ target: { name: 'openedFor', value: e.target.value } })}
+              value={formData.client}
+              onChange={(e) => handleChange({ target: { name: 'client', value: e.target.value } })}
               icon={<TbSearch size={16} />}
             />
 
@@ -159,8 +197,8 @@ const App = () => {
 
             <FormInput
               label="Assigned to"
-              value={formData.assignedTo}
-              onChange={(e) => handleChange({ target: { name: 'assignedTo', value: e.target.value } })}
+              value={formData.assignee}
+              onChange={(e) => handleChange({ target: { name: 'assignee', value: e.target.value } })}
               icon={<TbSearch size={16} />}
             />
 
@@ -187,8 +225,8 @@ const App = () => {
               Work notes
             </label>
             <textarea
-              name="workNotes"
-              value={formData.workNotes}
+              name="work_notes"
+              value={formData.work_notes}
               onChange={handleChange}
               rows="6"
               className={styles.notesTextarea}
@@ -203,7 +241,7 @@ const App = () => {
             <button
               type="submit"
               className={`${styles.buttonBase} ${styles.buttonSave}`}
-              onClick={() => console.log('Form Data Submitted:', formData)}
+              onClick={() => handleSave(formData)}
             >
               Save
             </button>

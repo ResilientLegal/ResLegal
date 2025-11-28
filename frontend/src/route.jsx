@@ -2,6 +2,8 @@
 import MattersList from './pages/MattersList';
 import HomePage from './pages/HomePage'
 import MatterForm from './components/MatterForm';
+import NewMatterForm from './components/NewMatterForm';
+
 const routes = [
     {
         path: '/', component:  <HomePage /> 
@@ -10,7 +12,10 @@ const routes = [
         path: '/matters', component: <MattersList /> 
     },
     {
-        path: '/matter', component: <MatterForm />
+        path: '/matter/:id', component: <MatterForm />
+    },
+    {
+        path: '/matter/-1', component: <NewMatterForm />
     }
 ]
 
