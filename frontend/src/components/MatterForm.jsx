@@ -135,7 +135,6 @@ const App = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
-    .then(res => console.log(res))
     .catch(error => console.error("Error:", error));
 }
 

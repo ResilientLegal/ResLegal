@@ -134,21 +134,6 @@ const App = () => {
                         />
                     </div>
 
-                    <div className={styles.inputGroup} style={{ marginBottom: '2rem' }}>
-                        <label className={styles.inputLabel} style={{ display: 'flex', alignItems: 'center' }}>
-                            <TbClipboard size={16} style={{ marginRight: '0.5rem' }} />
-                            Work notes
-                        </label>
-                        <textarea
-                            name="work_notes"
-                            value={formData.work_notes}
-                            onChange={handleChange}
-                            rows="6"
-                            className={styles.notesTextarea}
-                            placeholder="Add comments and internal notes here..."
-                        ></textarea>
-                    </div>
-
                     <div className={styles.actionButtons}>
                         <button
                             type="submit"
