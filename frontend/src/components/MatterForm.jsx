@@ -5,8 +5,24 @@ import SelectableList from './SelectableList.jsx';
 import styles from '../styles/MatterForm.module.css'
 import DJANGO_PORT from '../services/setting.js';
 
-const types = ['Civil', 'Criminal', 'Family Law', 'Appeal', 'Probate', 'Small Claims'];
-const states = ['In Progress', 'Pending Approval', 'Approved'];
+const TYPE_MAP = {
+    'CIVIL': 'Civil',
+    'CRIMINAL': 'Criminal',
+    'FAMILY_LAW': 'Family Law',
+    'APPEAL': 'Appeal',
+    'PROBATE': 'Probate',
+    'SMALL_CLAIMS': 'Small Claims',
+};
+
+const STATE_MAP = {
+    'IN_PROGRESS': 'In Progress',
+    'PENDING_APPROVAL': 'Pending Approval',
+    'APPROVED': 'Approved',
+};
+
+// Use the values (labels) for the FormSelect options
+const types = Object.values(TYPE_MAP);
+const states = Object.values(STATE_MAP);
 
 const FormInput = ({ label, value, onChange, required, readOnly = false, icon, listOptions, onSelect }) => {
   const inputName = label.toLowerCase().replace(/\s/g, '');
@@ -149,13 +165,12 @@ const App = () => {
       'state': data.state.toUpperCase().replace(' ', '_'),
       'approver': approver
     };
-
     fetch(`${DJANGO_PORT}/api/matters/${id}/`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     })
-      .catch(error => console.error("Error:", error));
+    .catch(error => console.error("Error:", error));
   }
 
   const handleApproverSelect = (item) => {
@@ -167,15 +182,16 @@ const App = () => {
     fetch(`${DJANGO_PORT}/api/matters/${id}`)
       .then(response => response.json())
       .then(data => {
+        console.log("Fetched data:", data);
         setFormData({
           title: data.title || '',
           client: data.client || '',
-          type: data.type || types[0],
+          type: TYPE_MAP[data.type] || data.type, 
+          state: STATE_MAP[data.state] || data.state,
           assignee: data.assignee || '',
-          state: data.state || states[0],
           shortDescription: data.shortDescription || '',
           work_notes: data.work_notes || '',
-          approver: data.approver || '',
+          approver: data.approver_detail?.username || '',
         });
       })
       .catch(error => console.error("Error:", error))

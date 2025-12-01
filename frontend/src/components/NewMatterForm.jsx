@@ -67,7 +67,8 @@ const App = () => {
             type: types[0],
             assignee: '',
             shortDescription: '',
-            work_notes: ''
+            work_notes: '',
+            approver: null,
         }
     );
     const navigate = useNavigate();
@@ -106,13 +107,6 @@ const App = () => {
                             onChange={(e) => handleChange({ target: { name: 'title', value: e.target.value } })}
                         />
 
-                        <FormInput
-                            label="Opened for"
-                            value={formData.client}
-                            onChange={(e) => handleChange({ target: { name: 'client', value: e.target.value } })}
-                            icon={<TbSearch size={16} />}
-                        />
-
                         <FormSelect
                             label="Type"
                             name="type"
@@ -120,13 +114,6 @@ const App = () => {
                             onChange={handleChange}
                             options={types}
                             required
-                        />
-
-                        <FormInput
-                            label="Assigned to"
-                            value={formData.assignee}
-                            onChange={(e) => handleChange({ target: { name: 'assignee', value: e.target.value } })}
-                            icon={<TbSearch size={16} />}
                         />
                     </div>
 
