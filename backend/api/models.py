@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -8,6 +9,12 @@ class Matter(models.Model):
     date = models.DateTimeField(default=timezone.now)
     assignee = models.CharField(max_length=100, null=True, blank=True)
     client = models.CharField(max_length=100, null=True, blank=True)
+    approver = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
     shortDescription = models.TextField(null=True, blank=True)
     work_notes = models.TextField(null=True, blank=True)
     state = models.CharField(max_length=50, default='IN_PROGRESS', choices={
@@ -25,5 +32,5 @@ class Matter(models.Model):
     })
 
     def __str__(self):
-        return self.activity
+        return self.title
 
