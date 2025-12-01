@@ -1,31 +1,39 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from '../styles/MattersList.module.css';
 
-const DUMMY_DATA = {
-  matters: [
-    { activity: 'Retainer Agreement Signed', date: '7/4/2020', status: 'Completed', assignee: 'Joanna Miles' },
-    { activity: 'Setup Mediation', date: '7/2/2020', status: 'In Progress', assignee: 'Steve Miller' },
-    { activity: 'Draft Documents', date: '6/30/2020', status: 'Overdue', assignee: 'Joe Smith' },
-  ],
-  summary: {
-    all: 3,
-    completed: 1,
-    not_completed: 2,
-    overdue: 1,
-  },
-}
-
 export default function MattersList() {
-  // Use embedded dummy data instead of fetching from API
-  const [data] = useState(DUMMY_DATA)
-  const { matters, summary } = data
-  
+  const navigate = useNavigate();
+  const [matters, setMatters] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const summary = {
+    all: matters.length,
+    completed: matters.filter(m => m.status === 'Completed').length,
+    not_completed: matters.filter(m => m.status !== 'Completed').length,
+    overdue: matters.filter(m => m.status === 'Overdue').length,
+  };
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/matters/1")
+    fetch("http://localhost:8000/api/matters/")
       .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error("Error:", error));
+      .then(data => {
+        setMatters(data);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        setLoading(false);
+      });
   }, []);
+
+  const handleRowClick = (matterId) => {
+    navigate(`/matter/${matterId}`);
+  };
+
+  if (loading) {
+    return <div className="page-bg"><p>Loading...</p></div>;
+  }
 
   return (
     <div className="page-bg">
@@ -33,7 +41,6 @@ export default function MattersList() {
         <div className="activities-header">
           <h2>Activities</h2>
         </div>
-
         <div className="activities-filters">
           <button className="filter-tab active">
             <span>All</span>
@@ -52,7 +59,6 @@ export default function MattersList() {
             <span className="filter-count">{summary.overdue}</span>
           </button>
         </div>
-
         <div className="activities-search-row">
           <input
             type="text"
@@ -61,7 +67,6 @@ export default function MattersList() {
             disabled
           />
         </div>
-
         <div className="activities-table-wrapper">
           <table className="activities-table">
             <thead>
@@ -76,13 +81,17 @@ export default function MattersList() {
               </tr>
             </thead>
             <tbody>
-              {matters.map((m, idx) => (
-                <tr key={idx}>
+              {matters.map((m) => (
+                <tr 
+                  key={m.id} 
+                  onClick={() => handleRowClick(m.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td className="col-checkbox">
-                    <input type="checkbox" />
+                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td className="col-activity">{m.activity}</td>
-                  <td className="col-date">{m.date}</td>
+                  <td className="col-date">{new Date(m.date).toLocaleDateString()}</td>
                   <td className="col-status">
                     {m.status === 'Completed' ? (
                       <span className="status-pill status-completed">Completed</span>
@@ -95,7 +104,7 @@ export default function MattersList() {
                     )}
                   </td>
                   <td className="col-assignee">
-                    <a href="#" className="assignee-link">{m.assignee}</a>
+                    <span className="assignee-link">{m.assignee}</span>
                   </td>
                 </tr>
               ))}
