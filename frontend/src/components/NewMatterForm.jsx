@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Router, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload } from 'react-icons/tb';
 import styles from '../styles/MatterForm.module.css'
 import DJANGO_PORT from '../services/setting.js';
@@ -59,7 +60,6 @@ const FormSelect = ({ label, value, onChange, required, options, name }) => (
 
 
 const App = () => {
-    const { id } = useParams();
     const [formData, setFormData] = useState(
         {
             title: '',
@@ -70,17 +70,21 @@ const App = () => {
             work_notes: ''
         }
     );
+    const navigate = useNavigate();
 
     const handleSave = (data) => {
         data = {...data, 'type': data.type.toUpperCase().replace(' ', '_')}
-        console.log(data)
 
         fetch(`${DJANGO_PORT}/api/matters/`, {
             method: 'POST',
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         })
-        .then(res => console.log(res))
+        .then(res => {
+            if (res.ok) {
+                navigate('/matters', { replace: true });
+            }
+        })
         .catch(error => console.error("Error:", error));
     }
 
