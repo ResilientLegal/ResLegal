@@ -17,6 +17,7 @@ class MatterSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['approver_detail'] = UserSerializer(instance.approver).data
+        response['assignee_detail'] = UserSerializer(instance.assignee).data
         return response
 
 

@@ -21,13 +21,20 @@ TYPE_CHOICES = [
 class Matter(models.Model):
     title = models.CharField(max_length=100)
     date = models.DateTimeField(default=timezone.now)
-    assignee = models.CharField(max_length=100, null=True, blank=True)
+    assignee = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assignee'
+    )
     client = models.CharField(max_length=100, null=True, blank=True)
     approver = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='approver'
     )
     shortDescription = models.TextField(null=True, blank=True)
     work_notes = models.TextField(null=True, blank=True)
