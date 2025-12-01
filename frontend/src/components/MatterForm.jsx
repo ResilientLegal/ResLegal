@@ -20,9 +20,9 @@ const STATE_MAP = {
     'APPROVED': 'Approved',
 };
 
-// Use the values (labels) for the FormSelect options
 const types = Object.values(TYPE_MAP);
 const states = Object.values(STATE_MAP);
+let users = [];
 
 const FormInput = ({ label, value, onChange, required, readOnly = false, icon, listOptions, onSelect }) => {
   const inputName = label.toLowerCase().replace(/\s/g, '');
@@ -182,7 +182,6 @@ const App = () => {
     fetch(`${DJANGO_PORT}/api/matters/${id}`)
       .then(response => response.json())
       .then(data => {
-        console.log("Fetched data:", data);
         setFormData({
           title: data.title || '',
           client: data.client || '',
@@ -196,6 +195,16 @@ const App = () => {
       })
       .catch(error => console.error("Error:", error))
       .finally(() => setIsLoading(false));
+
+      fetch(`${DJANGO_PORT}/api/users/`)
+        .then(response => response.json())
+        .then(data => {
+          users = data.map(user => ({
+            id: user.id,
+            label: user.username,
+          }));
+        })
+        .catch(error => console.error("Error fetching users:", error));
   }, []);
 
   const handleChange = (e) => {
@@ -256,7 +265,7 @@ const App = () => {
               value={formData.approver}
               onChange={(e) => handleChange({ target: { name: 'approver', value: e.target.value } })}
               icon={<TbSearch size={16} />}
-              listOptions={[{ id: '1', label: 'admin' }, { id: '2', label: 'Approver 2' }, { id: '3', label: 'Approver 3' }]}
+              listOptions={users}
               onSelect={handleApproverSelect}
             />
           </div>
