@@ -4,20 +4,23 @@ import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload } from 'react-icons
 import SelectableList from './SelectableList.jsx';
 import styles from '../styles/MatterForm.module.css'
 import DJANGO_PORT from '../services/setting.js';
+import { Notification } from '@mantine/core';
+import '@mantine/core/styles/default-css-variables.css';
+import '@mantine/core/styles/Notification.css';
 
 const TYPE_MAP = {
-    'CIVIL': 'Civil',
-    'CRIMINAL': 'Criminal',
-    'FAMILY_LAW': 'Family Law',
-    'APPEAL': 'Appeal',
-    'PROBATE': 'Probate',
-    'SMALL_CLAIMS': 'Small Claims',
+  'CIVIL': 'Civil',
+  'CRIMINAL': 'Criminal',
+  'FAMILY_LAW': 'Family Law',
+  'APPEAL': 'Appeal',
+  'PROBATE': 'Probate',
+  'SMALL_CLAIMS': 'Small Claims',
 };
 
 const STATE_MAP = {
-    'IN_PROGRESS': 'In Progress',
-    'PENDING_APPROVAL': 'Pending Approval',
-    'APPROVED': 'Approved',
+  'IN_PROGRESS': 'In Progress',
+  'PENDING_APPROVAL': 'Pending Approval',
+  'APPROVED': 'Approved',
 };
 
 const types = Object.values(TYPE_MAP);
@@ -158,6 +161,7 @@ const App = () => {
   const [approver, setApprover] = useState();
   const [assignee, setAssignee] = useState();
   const [isLoading, setIsLoading] = useState(true);
+  const [showNotification, setShowNotification] = useState(false);
 
   const handleSave = (data) => {
     data = {
@@ -171,8 +175,12 @@ const App = () => {
       method: 'PATCH',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
+    }).then(res => {
+      if (res.ok) {
+        setShowNotification(true);
+      }
     })
-    .catch(error => console.error("Error:", error));
+      .catch(error => console.error("Error:", error));
   }
 
   const handleApproverSelect = (item) => {
@@ -192,7 +200,7 @@ const App = () => {
         setFormData({
           title: data.title || '',
           client: data.client || '',
-          type: TYPE_MAP[data.type] || data.type, 
+          type: TYPE_MAP[data.type] || data.type,
           state: STATE_MAP[data.state] || data.state,
           assignee: data.assignee_detail?.username || null,
           shortDescription: data.shortDescription || '',
@@ -203,15 +211,15 @@ const App = () => {
       .catch(error => console.error("Error:", error))
       .finally(() => setIsLoading(false));
 
-      fetch(`${DJANGO_PORT}/api/users/`)
-        .then(response => response.json())
-        .then(data => {
-          users = data.map(user => ({
-            id: user.id,
-            label: user.username,
-          }));
-        })
-        .catch(error => console.error("Error fetching users:", error));
+    fetch(`${DJANGO_PORT}/api/users/`)
+      .then(response => response.json())
+      .then(data => {
+        users = data.map(user => ({
+          id: user.id,
+          label: user.username,
+        }));
+      })
+      .catch(error => console.error("Error fetching users:", error));
   }, []);
 
   const handleChange = (e) => {
@@ -225,6 +233,17 @@ const App = () => {
 
   return (
     <>
+      {showNotification && (
+        <div style={{ position: 'fixed', top: '1rem', left: '50%', zIndex: 1000  }}>
+          <Notification
+            title="Saved successfully"
+            onClose={() => setShowNotification(false)}
+          >
+            Your record has been updated.
+          </Notification>
+        </div>
+      )}
+
       <div className={styles.appContainer}>
         <div className={styles.formCard}>
           <h1 className={styles.headerTitle}>Matter Record: {formData.title}</h1>
