@@ -1,4 +1,5 @@
 import json
+import base64
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +12,22 @@ from datetime import datetime
 
 GRAPHQL_URL = "http://localhost:8000/graphql"
 REST_URL = "http://localhost:18000/v1/transactions"
+
+
+def save_to_resilientdb(data):
+    """Helper function to save data to ResilientDB"""
+    try:
+        r = requests.post(
+            REST_URL + '/commit',
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(data),
+            timeout=10
+        )
+        if r.status_code == 200:
+            return r.json().get('id')
+    except Exception as e:
+        print(f"ResilientDB error: {e}")
+    return None
 
 
 class MatterViewSet(viewsets.ModelViewSet):
@@ -44,31 +61,34 @@ class AttachmentUploadView(APIView):
         if not file:
             return Response({'message': 'No file provided'}, status=400)
 
+        # Read file content and encode to base64
+        file_content = file.read()
+        file_base64 = base64.b64encode(file_content).decode('utf-8')
+        
+        # Reset file pointer for saving locally
+        file.seek(0)
+
         # Save file locally
         filename = file.name
         file_path = default_storage.save(f'attachments/{filename}', file)
 
-        # Save metadata to ResilientDB
+        # Get file size and type
+        file_size = len(file_content)
+        file_type = file.content_type
+
+        # Save file data to ResilientDB (metadata + content)
         resdb_data = {
             "id": f"attachment-{matter_id}-{datetime.now().timestamp()}",
+            "type": "attachment",
             "filename": filename,
+            "file_type": file_type,
+            "file_size": file_size,
+            "file_content": file_base64,
             "uploaded_by": uploaded_by,
             "uploaded_at": datetime.now().isoformat(),
             "matter_id": matter_id
         }
-
-        resdb_tx_id = None
-        try:
-            r = requests.post(
-                REST_URL + '/commit',
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(resdb_data),
-                timeout=10
-            )
-            if r.status_code == 200:
-                resdb_tx_id = r.json().get('id')
-        except Exception as e:
-            print(f"ResilientDB error: {e}")
+        resdb_tx_id = save_to_resilientdb(resdb_data)
 
         # Save to local DB
         attachment = Attachment.objects.create(
@@ -86,6 +106,7 @@ class AttachmentUploadView(APIView):
                 'filename': attachment.filename,
                 'uploaded_by': attachment.uploaded_by,
                 'uploaded_at': attachment.uploaded_at.isoformat(),
+                'file_size': file_size,
                 'resdb_tx_id': resdb_tx_id
             }
         }, status=201)
