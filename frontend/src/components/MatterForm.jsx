@@ -156,6 +156,7 @@ const App = () => {
   const { id } = useParams();
   const [formData, setFormData] = useState();
   const [approver, setApprover] = useState();
+  const [assignee, setAssignee] = useState();
   const [isLoading, setIsLoading] = useState(true);
 
   const handleSave = (data) => {
@@ -163,7 +164,8 @@ const App = () => {
       ...data,
       'type': data.type.toUpperCase().replace(' ', '_'),
       'state': data.state.toUpperCase().replace(' ', '_'),
-      'approver': approver
+      'approver': approver,
+      'assignee': assignee,
     };
     fetch(`${DJANGO_PORT}/api/matters/${id}/`, {
       method: 'PATCH',
@@ -178,6 +180,11 @@ const App = () => {
     setApprover(id);
   }
 
+  const handleAssigneeSelect = (item) => {
+    const { id = "" } = item;
+    setAssignee(id);
+  }
+
   useEffect(() => {
     fetch(`${DJANGO_PORT}/api/matters/${id}`)
       .then(response => response.json())
@@ -187,10 +194,10 @@ const App = () => {
           client: data.client || '',
           type: TYPE_MAP[data.type] || data.type, 
           state: STATE_MAP[data.state] || data.state,
-          assignee: data.assignee || '',
+          assignee: data.assignee_detail?.username || null,
           shortDescription: data.shortDescription || '',
           work_notes: data.work_notes || '',
-          approver: data.approver_detail?.username || '',
+          approver: data.approver_detail?.username || null,
         });
       })
       .catch(error => console.error("Error:", error))
@@ -250,6 +257,8 @@ const App = () => {
               value={formData.assignee}
               onChange={(e) => handleChange({ target: { name: 'assignee', value: e.target.value } })}
               icon={<TbSearch size={16} />}
+              listOptions={users}
+              onSelect={handleAssigneeSelect}
             />
 
             <FormSelect
