@@ -1,21 +1,29 @@
-// import MattersPage from './pages/MattersPage'
 import MattersList from './pages/MattersList';
-import HomePage from './pages/HomePage'
+import HomePage from './pages/HomePage';
 import MatterForm from './components/MatterForm';
 import NewMatterForm from './components/NewMatterForm';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const routes = [
     {
-        path: '/', component:  <HomePage /> 
+        path: '/login', component: <LoginPage />
     },
     {
-        path: '/matters', component: <MattersList /> 
+        path: '/signup', component: <SignupPage />
     },
     {
-        path: '/matter/:id', component: <MatterForm />
+        path: '/', component: <ProtectedRoute><HomePage /></ProtectedRoute>
     },
     {
-        path: '/matter/-1', component: <NewMatterForm />
+        path: '/matters', component: <ProtectedRoute><MattersList /></ProtectedRoute>
+    },
+    {
+        path: '/matter/:id', component: <ProtectedRoute><MatterForm /></ProtectedRoute>
+    },
+    {
+        path: '/matter/-1', component: <ProtectedRoute><NewMatterForm /></ProtectedRoute>
     }
 ]
 
