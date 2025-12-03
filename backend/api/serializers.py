@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Matter
+from .models import Matter, MatterTransaction
 from django.contrib.auth.models import User
 
 
@@ -19,5 +19,10 @@ class MatterSerializer(serializers.ModelSerializer):
         response['approver_detail'] = UserSerializer(instance.approver).data
         response['assignee_detail'] = UserSerializer(instance.assignee).data
         return response
+    
+class MatterTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatterTransaction
+        fields = "__all__"
 
 

@@ -1,3 +1,5 @@
+import json
+import requests
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
@@ -5,8 +7,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Matter, User
-from .serializers import MatterSerializer, UserSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Matter, MatterTransaction, User
+from .serializers import MatterSerializer, MatterTransactionSerializer, UserSerializer
+
+GRAPHQL_URL = "http://localhost:8000/graphql"
+REST_URL = "http://localhost:18000/v1/transactions"
 
 
 class MatterViewSet(viewsets.ModelViewSet):
@@ -91,3 +97,41 @@ class LoginView(APIView):
                 'fullName': f"{user.first_name} {user.last_name}".strip()
             }
         })
+    
+class MatterTransactionViewSet(viewsets.ModelViewSet):
+    queryset = MatterTransaction.objects.all()
+    serializer_class = MatterTransactionSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['matter_id']
+
+class CommitTransaction(APIView):
+    def post(self, request):
+        r = requests.post(REST_URL + '/commit', headers={"Content-Type": "application/json"}, data=json.dumps(request.data), timeout=10)
+        return Response(r)
+
+
+class GetTransaction(APIView):
+    def get(self, request, txn_id):
+        # try:
+            r = requests.get(
+                f'{REST_URL}/{txn_id}', 
+                headers={"Content-Type": "application/json"}
+            )
+            r.raise_for_status()
+
+            print("Transaction Response:", r.json())
+            
+            return Response(r.json())
+        
+        # except requests.exceptions.HTTPError as e:
+        #     error_detail = e.response.text if e.response is not None else "Transaction not found or external error."
+        #     return Response(
+        #         {"error": "Failed to retrieve transaction", "details": error_detail},
+        #         status=e.response.status_code if e.response is not None else status.HTTP_502_BAD_GATEWAY
+        #     )
+        # except Exception as e:
+        #     return Response(
+        #         {"error": "Could not connect to external service.", "details": str(e)},
+        #         status=status.HTTP_503_SERVICE_UNAVAILABLE
+        #     )
