@@ -62,7 +62,7 @@ class Matter(models.Model):
         if created:
             create_matter_transaction(instance.id, instance)
         elif instance.previous_state != instance.state:
-            update_matter_transaction(instance.id, instance.state)
+            update_matter_transaction(instance.id, instance.state, instance)
 
 class MatterTransaction(models.Model):
     matter = models.ForeignKey(Matter, on_delete=models.CASCADE)
