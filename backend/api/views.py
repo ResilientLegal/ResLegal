@@ -129,7 +129,7 @@ class LoginView(APIView):
         }
         resdb_tx_id = save_to_resilientdb(resdb_data)
 
-       return Response({
+        return Response({
             'token': str(refresh.access_token),
             'refresh': str(refresh),
             'user': {
