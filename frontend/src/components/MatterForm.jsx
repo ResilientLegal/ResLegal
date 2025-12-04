@@ -8,35 +8,11 @@ import { Notification } from '@mantine/core';
 import '@mantine/core/styles/default-css-variables.css';
 import '@mantine/core/styles/Notification.css';
 
-const TYPE_MAP = {
-  'CIVIL': 'Civil',
-  'CRIMINAL': 'Criminal',
-  'FAMILY_LAW': 'Family Law',
-  'APPEAL': 'Appeal',
-  'PROBATE': 'Probate',
-  'SMALL_CLAIMS': 'Small Claims',
-};
+const types = ['Civil', 'Criminal', 'Family Law', 'Appeals', 'Probate', 'Small Claims'];
+const states = ['New', 'In Progress', 'On Hold', 'Resolved', 'Closed'];
 
-const STATE_MAP = {
-  'IN_PROGRESS': 'In Progress',
-  'PENDING_APPROVAL': 'Pending Approval',
-  'APPROVED': 'Approved',
-};
-
-const types = Object.values(TYPE_MAP);
-const states = Object.values(STATE_MAP);
-let users = [];
-
-const FormInput = ({ label, value, onChange, required, readOnly = false, icon, listOptions, onSelect }) => {
+const FormInput = ({ label, value, onChange, required, readOnly = false, icon }) => {
   const inputName = label.toLowerCase().replace(/\s/g, '');
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-
-  const handleSelection = (item) => {
-    onSelect(item);
-    onChange({ target: { name: inputName, value: item.label } });
-    setIsPopupVisible(false);
-  };
-
   return (
     <div className={styles.inputGroup}>
       <label className={styles.inputLabel}>
@@ -53,19 +29,8 @@ const FormInput = ({ label, value, onChange, required, readOnly = false, icon, l
           className={`${styles.inputField} ${icon ? styles.iconPresent : ''}`}
         />
         {icon && (
-          <div className={styles.inputIcon} onClick={() => setIsPopupVisible(isPopupVisible => !isPopupVisible)}>
+          <div className={styles.inputIcon}>
             {icon}
-          </div>
-        )}
-
-        {isPopupVisible && (
-          <div className={styles.popupContainer}>
-            <SelectableList
-              data={listOptions}
-              labelKey="label"
-              valueKey="id"
-              onSelect={handleSelection}
-            />
           </div>
         )}
       </div>
@@ -100,14 +65,14 @@ const FormSelect = ({ label, value, onChange, required, options, name }) => (
 const DragAndDropArea = () => {
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
+    const handleDragLeave = () => {
+        setIsDragging(false);
+    };
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -115,9 +80,9 @@ const DragAndDropArea = () => {
     console.log('Files dropped:', e.dataTransfer.files);
   };
 
-  const handleBrowseClick = () => {
-    document.getElementById('file-upload').click();
-  };
+    const handleBrowseClick = () => {
+        document.getElementById('file-upload').click();
+    };
 
   const handleFileChange = (e) => {
     console.log('Files selected:', e.target.files);
@@ -233,32 +198,21 @@ const App = () => {
 
   return (
     <>
-      {showNotification && (
-        <div style={{ position: 'fixed', top: '1rem', left: '50%', zIndex: 1000  }}>
-          <Notification
-            title="Saved successfully"
-            onClose={() => setShowNotification(false)}
-          >
-            Your record has been updated.
-          </Notification>
-        </div>
-      )}
-
       <div className={styles.appContainer}>
         <div className={styles.formCard}>
-          <h1 className={styles.headerTitle}>Matter Record: {formData.title}</h1>
+          <h1 className={styles.headerTitle}>Matter Record: {formData.number}</h1>
 
           <div className={styles.formGrid}>
             <FormInput
-              label="Title"
-              value={formData.title}
-              onChange={(e) => handleChange({ target: { name: 'title', value: e.target.value } })}
+              label="Number"
+              value={formData.number}
+              readOnly
             />
 
             <FormInput
               label="Opened for"
-              value={formData.client}
-              onChange={(e) => handleChange({ target: { name: 'client', value: e.target.value } })}
+              value={formData.openedFor}
+              onChange={(e) => handleChange({ target: { name: 'openedFor', value: e.target.value } })}
               icon={<TbSearch size={16} />}
             />
 
@@ -273,11 +227,9 @@ const App = () => {
 
             <FormInput
               label="Assigned to"
-              value={formData.assignee}
-              onChange={(e) => handleChange({ target: { name: 'assignee', value: e.target.value } })}
+              value={formData.assignedTo}
+              onChange={(e) => handleChange({ target: { name: 'assignedTo', value: e.target.value } })}
               icon={<TbSearch size={16} />}
-              listOptions={users}
-              onSelect={handleAssigneeSelect}
             />
 
             <FormSelect
@@ -286,15 +238,6 @@ const App = () => {
               value={formData.state}
               onChange={handleChange}
               options={states}
-            />
-
-            <FormInput
-              label="Approver"
-              value={formData.approver}
-              onChange={(e) => handleChange({ target: { name: 'approver', value: e.target.value } })}
-              icon={<TbSearch size={16} />}
-              listOptions={users}
-              onSelect={handleApproverSelect}
             />
           </div>
 
@@ -312,8 +255,8 @@ const App = () => {
               Work notes
             </label>
             <textarea
-              name="work_notes"
-              value={formData.work_notes}
+              name="workNotes"
+              value={formData.workNotes}
               onChange={handleChange}
               rows="6"
               className={styles.notesTextarea}
@@ -328,7 +271,7 @@ const App = () => {
             <button
               type="submit"
               className={`${styles.buttonBase} ${styles.buttonSave}`}
-              onClick={() => handleSave(formData)}
+              onClick={() => console.log('Form Data Submitted:', formData)}
             >
               Save
             </button>

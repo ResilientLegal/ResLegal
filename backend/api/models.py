@@ -1,4 +1,3 @@
-from urllib import response
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -23,29 +22,10 @@ TYPE_CHOICES = [
 ]
 
 class Matter(models.Model):
-    title = models.CharField(max_length=100)
+    activity = models.CharField(max_length=100)
     date = models.DateTimeField(default=timezone.now)
-    assignee = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='assignee'
-    )
-    client = models.CharField(max_length=100, null=True, blank=True)
-    approver = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='approver'
-    )
-    shortDescription = models.TextField(null=True, blank=True)
-    work_notes = models.TextField(null=True, blank=True)
-    state = models.CharField(max_length=50, default='IN_PROGRESS', choices=STATE_CHOICES)
-    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
-
-    previous_state = None
+    status = models.CharField(max_length=50)
+    assignee = models.CharField(max_length=100)
 
     def __str__(self):
         return self.title
