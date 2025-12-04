@@ -8,8 +8,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Matter
-from .serializers import MatterSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Matter, MatterTransaction, User
+from .serializers import MatterSerializer, MatterTransactionSerializer, UserSerializer
+
+GRAPHQL_URL = "http://localhost:8000/graphql"
+REST_URL = "http://localhost:18000/v1/transactions"
 
 # ResilientDB URL
 REST_URL = "http://localhost:18000/v1/transactions"
@@ -19,6 +23,9 @@ class MatterViewSet(viewsets.ModelViewSet):
     queryset = Matter.objects.all()
     serializer_class = MatterSerializer
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 def save_to_resilientdb(data):
     """Helper function to save data to ResilientDB"""
@@ -122,7 +129,7 @@ class LoginView(APIView):
         }
         resdb_tx_id = save_to_resilientdb(resdb_data)
 
-        return Response({
+       return Response({
             'token': str(refresh.access_token),
             'refresh': str(refresh),
             'user': {
@@ -132,3 +139,41 @@ class LoginView(APIView):
             },
             'resdb_tx_id': resdb_tx_id
         })
+    
+class MatterTransactionViewSet(viewsets.ModelViewSet):
+    queryset = MatterTransaction.objects.all()
+    serializer_class = MatterTransactionSerializer
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['matter_id']
+
+class CommitTransaction(APIView):
+    def post(self, request):
+        r = requests.post(REST_URL + '/commit', headers={"Content-Type": "application/json"}, data=json.dumps(request.data), timeout=10)
+        return Response(r)
+
+
+class GetTransaction(APIView):
+    def get(self, request, txn_id):
+        # try:
+            r = requests.get(
+                f'{REST_URL}/{txn_id}', 
+                headers={"Content-Type": "application/json"}
+            )
+            r.raise_for_status()
+
+            print("Transaction Response:", r.json())
+            
+            return Response(r.json())
+        
+        # except requests.exceptions.HTTPError as e:
+        #     error_detail = e.response.text if e.response is not None else "Transaction not found or external error."
+        #     return Response(
+        #         {"error": "Failed to retrieve transaction", "details": error_detail},
+        #         status=e.response.status_code if e.response is not None else status.HTTP_502_BAD_GATEWAY
+        #     )
+        # except Exception as e:
+        #     return Response(
+        #         {"error": "Could not connect to external service.", "details": str(e)},
+        #         status=status.HTTP_503_SERVICE_UNAVAILABLE
+        #     )
