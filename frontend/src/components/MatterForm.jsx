@@ -1,15 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload, TbFile, TbTrash } from 'react-icons/tb';
+import SelectableList from './SelectableList.jsx';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload } from 'react-icons/tb';
 import styles from '../styles/MatterForm.module.css'
-
+import DJANGO_PORT from '../services/setting.js';
+import { Notification } from '@mantine/core';
+import '@mantine/core/styles/default-css-variables.css';
+import '@mantine/core/styles/Notification.css';
 const API_BASE_URL = 'http://localhost:8000/api';
 
-const types = ['Civil', 'Criminal', 'Family Law', 'Appeals', 'Probate', 'Small Claims'];
-const states = ['New', 'In Progress', 'On Hold', 'Resolved', 'Closed'];
+const TYPE_MAP = {
+  'CIVIL': 'Civil',
+  'CRIMINAL': 'Criminal',
+  'FAMILY_LAW': 'Family Law',
+  'APPEAL': 'Appeal',
+  'PROBATE': 'Probate',
+  'SMALL_CLAIMS': 'Small Claims',
+};
 
-const FormInput = ({ label, value, onChange, required, readOnly = false, icon }) => {
+const STATE_MAP = {
+  'IN_PROGRESS': 'In Progress',
+  'PENDING_APPROVAL': 'Pending Approval',
+  'APPROVED': 'Approved',
+};
+
+const types = Object.values(TYPE_MAP);
+const states = Object.values(STATE_MAP);
+let users = [];
+
+const FormInput = ({ label, value, onChange, required, readOnly = false, icon, listOptions, onSelect }) => {
   const inputName = label.toLowerCase().replace(/\s/g, '');
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+
+  const handleSelection = (item) => {
+    onSelect(item);
+    onChange({ target: { name: inputName, value: item.label } });
+    setIsPopupVisible(false);
+  };
+
   return (
     <div className={styles.inputGroup}>
       <label className={styles.inputLabel}>
@@ -26,8 +57,19 @@ const FormInput = ({ label, value, onChange, required, readOnly = false, icon })
           className={`${styles.inputField} ${icon ? styles.iconPresent : ''}`}
         />
         {icon && (
-          <div className={styles.inputIcon}>
+          <div className={styles.inputIcon} onClick={() => setIsPopupVisible(isPopupVisible => !isPopupVisible)}>
             {icon}
+          </div>
+        )}
+
+        {isPopupVisible && (
+          <div className={styles.popupContainer}>
+            <SelectableList
+              data={listOptions}
+              labelKey="label"
+              valueKey="id"
+              onSelect={handleSelection}
+            />
           </div>
         )}
       </div>
@@ -64,14 +106,14 @@ const DragAndDropArea = ({ matterId, onUploadSuccess }) => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-    };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
 
-    const handleDragLeave = () => {
-        setIsDragging(false);
-    };
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
 
     const handleDrop = (e) => {
         e.preventDefault();
@@ -82,9 +124,9 @@ const DragAndDropArea = ({ matterId, onUploadSuccess }) => {
         }
     };
 
-    const handleBrowseClick = () => {
-        document.getElementById('file-upload').click();
-    };
+  const handleBrowseClick = () => {
+    document.getElementById('file-upload').click();
+  };
 
     const handleFileChange = (e) => {
         if (e.target.files.length > 0) {
@@ -253,31 +295,44 @@ const App = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  if (loading) {
-    return <div className={styles.appContainer}><p>Loading...</p></div>;
-  }
+ if (isLoading || loading) {
+  return <div className={styles.appContainer}><p>Loading...</p></div>;
+}
 
   if (!matterId) {
     return <div className={styles.appContainer}><p>No matter selected</p></div>;
+  if (isLoading) {
+    return <div>Loading data...</div>;
   }
 
   return (
     <>
+      {showNotification && (
+        <div style={{ position: 'fixed', top: '1rem', left: '50%', zIndex: 1000  }}>
+          <Notification
+            title="Saved successfully"
+            onClose={() => setShowNotification(false)}
+          >
+            Your record has been updated.
+          </Notification>
+        </div>
+      )}
+
       <div className={styles.appContainer}>
         <div className={styles.formCard}>
-          <h1 className={styles.headerTitle}>Matter Record: {formData.number}</h1>
+          <h1 className={styles.headerTitle}>Matter Record: {formData.title}</h1>
 
           <div className={styles.formGrid}>
             <FormInput
-              label="Number"
-              value={formData.number}
-              readOnly
+              label="Title"
+              value={formData.title}
+              onChange={(e) => handleChange({ target: { name: 'title', value: e.target.value } })}
             />
 
             <FormInput
               label="Opened for"
-              value={formData.openedFor}
-              onChange={(e) => handleChange({ target: { name: 'openedFor', value: e.target.value } })}
+              value={formData.client}
+              onChange={(e) => handleChange({ target: { name: 'client', value: e.target.value } })}
               icon={<TbSearch size={16} />}
             />
 
@@ -292,9 +347,11 @@ const App = () => {
 
             <FormInput
               label="Assigned to"
-              value={formData.assignedTo}
-              onChange={(e) => handleChange({ target: { name: 'assignedTo', value: e.target.value } })}
+              value={formData.assignee}
+              onChange={(e) => handleChange({ target: { name: 'assignee', value: e.target.value } })}
               icon={<TbSearch size={16} />}
+              listOptions={users}
+              onSelect={handleAssigneeSelect}
             />
 
             <FormSelect
@@ -303,6 +360,15 @@ const App = () => {
               value={formData.state}
               onChange={handleChange}
               options={states}
+            />
+
+            <FormInput
+              label="Approver"
+              value={formData.approver}
+              onChange={(e) => handleChange({ target: { name: 'approver', value: e.target.value } })}
+              icon={<TbSearch size={16} />}
+              listOptions={users}
+              onSelect={handleApproverSelect}
             />
           </div>
 
@@ -320,8 +386,8 @@ const App = () => {
               Work notes
             </label>
             <textarea
-              name="workNotes"
-              value={formData.workNotes}
+              name="work_notes"
+              value={formData.work_notes}
               onChange={handleChange}
               rows="6"
               className={styles.notesTextarea}
@@ -340,7 +406,7 @@ const App = () => {
             <button
               type="submit"
               className={`${styles.buttonBase} ${styles.buttonSave}`}
-              onClick={() => console.log('Form Data Submitted:', formData)}
+              onClick={() => handleSave(formData)}
             >
               Save
             </button>

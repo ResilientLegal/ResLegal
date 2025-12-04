@@ -253,6 +253,7 @@ body {
 .buttonSave:hover {
     background-color: var(--color-primary-hover);
 }
+
 .attachmentsList {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
@@ -290,4 +291,16 @@ body {
 .attachmentMeta {
     font-size: 0.75rem;
     color: var(--color-text-medium, #6b7280);
+}
+
+.popupContainer {
+    position: absolute;
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

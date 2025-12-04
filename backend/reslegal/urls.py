@@ -4,10 +4,13 @@ URL configuration for reslegal project.
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from api.views import MatterViewSet, CommitTransaction, GetTransaction
+from api.views import MatterViewSet, UserViewSet, MatterTransactionViewSet, CommitTransaction, GetTransaction
+
 
 router = routers.DefaultRouter()
 router.register(r'matters', MatterViewSet)
+router.register(r'users', UserViewSet)
+router.register(r'matter-transactions', MatterTransactionViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),

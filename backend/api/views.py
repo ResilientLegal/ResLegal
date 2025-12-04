@@ -1,14 +1,18 @@
 import json
 import base64
 import requests
+from datetime import datetime
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import render
-from rest_framework import viewsets
-from .models import Matter, Attachment
-from .serializers import MatterSerializer
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken
+from django_filters.rest_framework import DjangoFilterBackend
 from django.core.files.storage import default_storage
-from datetime import datetime
+from .models import Matter, MatterTransaction, Attachment
+from .serializers import MatterSerializer, MatterTransactionSerializer, UserSerializer
 
 GRAPHQL_URL = "http://localhost:8000/graphql"
 REST_URL = "http://localhost:18000/v1/transactions"
@@ -35,17 +39,103 @@ class MatterViewSet(viewsets.ModelViewSet):
     serializer_class = MatterSerializer
 
 
-class CommitTransaction(APIView):
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class SignupView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
-        r = requests.post(REST_URL + '/commit', headers={"Content-Type": "application/json"}, data=json.dumps(request.data), timeout=10)
-        return Response(r)
+        full_name = request.data.get('fullName', '')
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return Response(
+                {'message': 'Email and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'message': 'User with this email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=full_name.split(' ')[0] if full_name else '',
+            last_name=' '.join(full_name.split(' ')[1:]) if full_name else ''
+        )
+
+        resdb_data = {
+            "id": f"user-registration-{user.id}-{datetime.now().timestamp()}",
+            "type": "user_registration",
+            "user_id": user.id,
+            "email": email,
+            "full_name": full_name,
+            "registered_at": datetime.now().isoformat()
+        }
+        resdb_tx_id = save_to_resilientdb(resdb_data)
+
+        return Response({
+            'message': 'Account created successfully',
+            'resdb_tx_id': resdb_tx_id
+        }, status=status.HTTP_201_CREATED)
 
 
-class GetTransaction(APIView):
-    def get(self, request, txn_id):
-        r = requests.get(REST_URL + f'/{txn_id}', headers={"Content-Type": "application/json"})
-        if (r):
-            return Response(r.json())
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email or not password:
+            return Response(
+                {'message': 'Email and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'message': 'Invalid email or password'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if not user.check_password(password):
+            return Response(
+                {'message': 'Invalid email or password'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        refresh = RefreshToken.for_user(user)
+
+        resdb_data = {
+            "id": f"user-login-{user.id}-{datetime.now().timestamp()}",
+            "type": "login_activity",
+            "user_id": user.id,
+            "email": email,
+            "login_at": datetime.now().isoformat()
+        }
+        resdb_tx_id = save_to_resilientdb(resdb_data)
+
+        return Response({
+            'token': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'fullName': f"{user.first_name} {user.last_name}".strip()
+            },
+            'resdb_tx_id': resdb_tx_id
+        })
 
 
 class AttachmentUploadView(APIView):
@@ -61,22 +151,16 @@ class AttachmentUploadView(APIView):
         if not file:
             return Response({'message': 'No file provided'}, status=400)
 
-        # Read file content and encode to base64
         file_content = file.read()
         file_base64 = base64.b64encode(file_content).decode('utf-8')
-        
-        # Reset file pointer for saving locally
         file.seek(0)
 
-        # Save file locally
         filename = file.name
         file_path = default_storage.save(f'attachments/{filename}', file)
 
-        # Get file size and type
         file_size = len(file_content)
         file_type = file.content_type
 
-        # Save file data to ResilientDB (metadata + content)
         resdb_data = {
             "id": f"attachment-{matter_id}-{datetime.now().timestamp()}",
             "type": "attachment",
@@ -90,7 +174,6 @@ class AttachmentUploadView(APIView):
         }
         resdb_tx_id = save_to_resilientdb(resdb_data)
 
-        # Save to local DB
         attachment = Attachment.objects.create(
             matter=matter,
             file=file_path,
@@ -129,4 +212,27 @@ class AttachmentListView(APIView):
         } for att in attachments]
 
         return Response(data)
-        
+
+
+class MatterTransactionViewSet(viewsets.ModelViewSet):
+    queryset = MatterTransaction.objects.all()
+    serializer_class = MatterTransactionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['matter_id']
+
+
+class CommitTransaction(APIView):
+    def post(self, request):
+        r = requests.post(REST_URL + '/commit', headers={"Content-Type": "application/json"}, data=json.dumps(request.data), timeout=10)
+        return Response(r)
+
+
+class GetTransaction(APIView):
+    def get(self, request, txn_id):
+        r = requests.get(
+            f'{REST_URL}/{txn_id}', 
+            headers={"Content-Type": "application/json"}
+        )
+        r.raise_for_status()
+        print("Transaction Response:", r.json())
+        return Response(r.json())
