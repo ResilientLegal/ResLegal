@@ -1,9 +1,12 @@
+import json
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 
 GRAPHQL_URL = "http://localhost:18000/graphql"
+REST_URL = "http://localhost:18000/v1/transactions"
+
 
 
 def generate_keys_mutation():
@@ -39,14 +42,14 @@ def postTransaction(metadata, asset):
     }
     return mutation, variables
 
-def get_transaction_query(txn_id):
-    query = """
-    query GetTransaction($id: String!) {
-      getTransaction(id: $id) {
-        signerPublicKey
-        asset
-      }
-    }
-    """
-    variables = {"id": txn_id}
-    return query, variables
+
+
+def post(data):
+    r = requests.post(REST_URL + '/commit', headers={"Content-Type": "application/json"}, data=json.dumps(data), timeout=10)
+    return Response(r)
+
+
+def get(txn_id):
+    r = requests.get(REST_URL + f'/{txn_id}', headers={"Content-Type": "application/json"})
+    if (r):
+        return Response(r.json())
