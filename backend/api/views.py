@@ -1,5 +1,4 @@
 import json
-import base64
 import requests
 from datetime import datetime
 from django.shortcuts import render
@@ -10,13 +9,23 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
-from django.core.files.storage import default_storage
-from .models import Matter, MatterTransaction, Attachment
+from .models import Matter, MatterTransaction, User
 from .serializers import MatterSerializer, MatterTransactionSerializer, UserSerializer
 
 GRAPHQL_URL = "http://localhost:8000/graphql"
 REST_URL = "http://localhost:18000/v1/transactions"
 
+# ResilientDB URL
+REST_URL = "http://localhost:18000/v1/transactions"
+
+
+class MatterViewSet(viewsets.ModelViewSet):
+    queryset = Matter.objects.all()
+    serializer_class = MatterSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 def save_to_resilientdb(data):
     """Helper function to save data to ResilientDB"""
@@ -32,16 +41,6 @@ def save_to_resilientdb(data):
     except Exception as e:
         print(f"ResilientDB error: {e}")
     return None
-
-
-class MatterViewSet(viewsets.ModelViewSet):
-    queryset = Matter.objects.all()
-    serializer_class = MatterSerializer
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
 
 
 class SignupView(APIView):
@@ -64,6 +63,7 @@ class SignupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Create user in local DB
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -72,6 +72,7 @@ class SignupView(APIView):
             last_name=' '.join(full_name.split(' ')[1:]) if full_name else ''
         )
 
+        # Save registration to ResilientDB
         resdb_data = {
             "id": f"user-registration-{user.id}-{datetime.now().timestamp()}",
             "type": "user_registration",
@@ -115,8 +116,10 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+        # Generate JWT token
         refresh = RefreshToken.for_user(user)
 
+        # Save login activity to ResilientDB
         resdb_data = {
             "id": f"user-login-{user.id}-{datetime.now().timestamp()}",
             "type": "login_activity",
@@ -137,89 +140,13 @@ class LoginView(APIView):
             'resdb_tx_id': resdb_tx_id
         })
 
-
-class AttachmentUploadView(APIView):
-    def post(self, request, matter_id):
-        try:
-            matter = Matter.objects.get(id=matter_id)
-        except Matter.DoesNotExist:
-            return Response({'message': 'Matter not found'}, status=404)
-
-        file = request.FILES.get('file')
-        uploaded_by = request.data.get('uploaded_by', 'Unknown')
-
-        if not file:
-            return Response({'message': 'No file provided'}, status=400)
-
-        file_content = file.read()
-        file_base64 = base64.b64encode(file_content).decode('utf-8')
-        file.seek(0)
-
-        filename = file.name
-        file_path = default_storage.save(f'attachments/{filename}', file)
-
-        file_size = len(file_content)
-        file_type = file.content_type
-
-        resdb_data = {
-            "id": f"attachment-{matter_id}-{datetime.now().timestamp()}",
-            "type": "attachment",
-            "filename": filename,
-            "file_type": file_type,
-            "file_size": file_size,
-            "file_content": file_base64,
-            "uploaded_by": uploaded_by,
-            "uploaded_at": datetime.now().isoformat(),
-            "matter_id": matter_id
-        }
-        resdb_tx_id = save_to_resilientdb(resdb_data)
-
-        attachment = Attachment.objects.create(
-            matter=matter,
-            file=file_path,
-            filename=filename,
-            uploaded_by=uploaded_by,
-            resdb_tx_id=resdb_tx_id
-        )
-
-        return Response({
-            'message': 'File uploaded successfully',
-            'attachment': {
-                'id': attachment.id,
-                'filename': attachment.filename,
-                'uploaded_by': attachment.uploaded_by,
-                'uploaded_at': attachment.uploaded_at.isoformat(),
-                'file_size': file_size,
-                'resdb_tx_id': resdb_tx_id
-            }
-        }, status=201)
-
-
-class AttachmentListView(APIView):
-    def get(self, request, matter_id):
-        try:
-            matter = Matter.objects.get(id=matter_id)
-        except Matter.DoesNotExist:
-            return Response({'message': 'Matter not found'}, status=404)
-
-        attachments = Attachment.objects.filter(matter=matter)
-        data = [{
-            'id': att.id,
-            'filename': att.filename,
-            'uploaded_by': att.uploaded_by,
-            'uploaded_at': att.uploaded_at.isoformat(),
-            'resdb_tx_id': att.resdb_tx_id
-        } for att in attachments]
-
-        return Response(data)
-
-
+    
 class MatterTransactionViewSet(viewsets.ModelViewSet):
     queryset = MatterTransaction.objects.all()
     serializer_class = MatterTransactionSerializer
+
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['matter_id']
-
 
 class CommitTransaction(APIView):
     def post(self, request):
@@ -229,10 +156,25 @@ class CommitTransaction(APIView):
 
 class GetTransaction(APIView):
     def get(self, request, txn_id):
-        r = requests.get(
-            f'{REST_URL}/{txn_id}', 
-            headers={"Content-Type": "application/json"}
-        )
-        r.raise_for_status()
-        print("Transaction Response:", r.json())
-        return Response(r.json())
+        # try:
+            r = requests.get(
+                f'{REST_URL}/{txn_id}', 
+                headers={"Content-Type": "application/json"}
+            )
+            r.raise_for_status()
+
+            print("Transaction Response:", r.json())
+            
+            return Response(r.json())
+        
+        # except requests.exceptions.HTTPError as e:
+        #     error_detail = e.response.text if e.response is not None else "Transaction not found or external error."
+        #     return Response(
+        #         {"error": "Failed to retrieve transaction", "details": error_detail},
+        #         status=e.response.status_code if e.response is not None else status.HTTP_502_BAD_GATEWAY
+        #     )
+        # except Exception as e:
+        #     return Response(
+        #         {"error": "Could not connect to external service.", "details": str(e)},
+        #         status=status.HTTP_503_SERVICE_UNAVAILABLE
+        #     )

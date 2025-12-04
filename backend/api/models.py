@@ -6,7 +6,6 @@ from django.db.models.signals import post_save, post_init
 from api.utils.resilientdb import post as commitTransaction
 import uuid
 
-
 # Create your models here.
 STATE_CHOICES = [
     ('IN_PROGRESS', 'In Progress'),
@@ -22,7 +21,6 @@ TYPE_CHOICES = [
     ('PROBATE', 'Probate'),
     ('SMALL_CLAIMS', 'Small Claims'),
 ]
-
 
 class Matter(models.Model):
     title = models.CharField(max_length=100)
@@ -73,24 +71,8 @@ class MatterTransaction(models.Model):
     txn_approved_id = models.CharField(max_length=100)
 
     def __str__(self):
-return self.matter.title
+        return self.matter.title
 
-
-class Attachment(models.Model):
-    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, related_name='attachments')
-    file = models.FileField(upload_to='attachments/')
-    filename = models.CharField(max_length=255)
-    uploaded_by = models.CharField(max_length=100)
-    uploaded_at = models.DateTimeField(default=timezone.now)
-    resdb_tx_id = models.CharField(max_length=255, null=True, blank=True)
-
-    def __str__(self):
-        return self.filename
-
-
-def create_matter_transaction(matter_id, instance):
-
-def create_matter_transaction(matter_id, instance):
 
 def create_matter_transaction(matter_id, instance):
     id = str(matter_id) + uuid.uuid4().hex
@@ -147,4 +129,3 @@ def update_matter_transaction(matter_id, state, instance):
 
 post_save.connect(Matter.post_save, sender=Matter)
 post_init.connect(Matter.remember_state, sender=Matter)
-
