@@ -1,5 +1,6 @@
 import json
 import requests
+from datetime import datetime
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
@@ -14,6 +15,9 @@ from .serializers import MatterSerializer, MatterTransactionSerializer, UserSeri
 GRAPHQL_URL = "http://localhost:8000/graphql"
 REST_URL = "http://localhost:18000/v1/transactions"
 
+# ResilientDB URL
+REST_URL = "http://localhost:18000/v1/transactions"
+
 
 class MatterViewSet(viewsets.ModelViewSet):
     queryset = Matter.objects.all()
@@ -22,6 +26,22 @@ class MatterViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+def save_to_resilientdb(data):
+    """Helper function to save data to ResilientDB"""
+    try:
+        r = requests.post(
+            REST_URL + '/commit',
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(data),
+            timeout=10
+        )
+        if r.status_code == 200:
+            return r.json().get('id')
+    except Exception as e:
+        print(f"ResilientDB error: {e}")
+    return None
+
 
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -43,7 +63,7 @@ class SignupView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create user
+        # Create user in local DB
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -52,10 +72,21 @@ class SignupView(APIView):
             last_name=' '.join(full_name.split(' ')[1:]) if full_name else ''
         )
 
-        return Response(
-            {'message': 'Account created successfully'},
-            status=status.HTTP_201_CREATED
-        )
+        # Save registration to ResilientDB
+        resdb_data = {
+            "id": f"user-registration-{user.id}-{datetime.now().timestamp()}",
+            "type": "user_registration",
+            "user_id": user.id,
+            "email": email,
+            "full_name": full_name,
+            "registered_at": datetime.now().isoformat()
+        }
+        resdb_tx_id = save_to_resilientdb(resdb_data)
+
+        return Response({
+            'message': 'Account created successfully',
+            'resdb_tx_id': resdb_tx_id
+        }, status=status.HTTP_201_CREATED)
 
 
 class LoginView(APIView):
@@ -88,14 +119,25 @@ class LoginView(APIView):
         # Generate JWT token
         refresh = RefreshToken.for_user(user)
 
-        return Response({
+        # Save login activity to ResilientDB
+        resdb_data = {
+            "id": f"user-login-{user.id}-{datetime.now().timestamp()}",
+            "type": "login_activity",
+            "user_id": user.id,
+            "email": email,
+            "login_at": datetime.now().isoformat()
+        }
+        resdb_tx_id = save_to_resilientdb(resdb_data)
+
+       return Response({
             'token': str(refresh.access_token),
             'refresh': str(refresh),
             'user': {
                 'id': user.id,
                 'email': user.email,
                 'fullName': f"{user.first_name} {user.last_name}".strip()
-            }
+            },
+            'resdb_tx_id': resdb_tx_id
         })
     
 class MatterTransactionViewSet(viewsets.ModelViewSet):
