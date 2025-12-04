@@ -9,11 +9,6 @@ import { fetchTransactionById } from '../services/Transactions.js';
 
 
 const formatTimeAgo = (utcTimestamp) => {
-
-  if (!utcTimestamp) {
-    return null;
-  }
-
   const pastTime = new Date(utcTimestamp);
   const now = new Date();
 
@@ -62,7 +57,7 @@ const TimeLine = ({ matterId }) => {
         const fetchedData = await fetchTransactionById(txn_in_progress_id);
         setTimestamps(prev => ({
           ...prev,
-          in_progress: formatTimeAgo(fetchedData?.value?.timestamp)
+          in_progress: formatTimeAgo(fetchedData.value.timestamp)
         }));
 
         return data;
@@ -80,7 +75,7 @@ const TimeLine = ({ matterId }) => {
 
         setTimestamps(prev => ({
           ...prev,
-          pending_approval: formatTimeAgo(fetchedData?.value?.timestamp)
+          pending_approval: formatTimeAgo(fetchedData.value.timestamp)
         }));
         return data;
       }).then(async (data) => {
@@ -96,7 +91,7 @@ const TimeLine = ({ matterId }) => {
 
         setTimestamps(prev => ({
           ...prev,
-          approved: formatTimeAgo(fetchedData?.value?.timestamp)
+          approved: formatTimeAgo(fetchedData.value.timestamp)
         }));
         return data;
       })
