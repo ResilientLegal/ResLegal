@@ -39,8 +39,6 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
-    background: radial-gradient(circle at top left, #66a6ff 0, #5b5aff 35%, #7b3cff 100%);
-
 }
 
 h1 {
