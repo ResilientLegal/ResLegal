@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/MattersList.module.css';
-
-const DUMMY_DATA = {
-  matters: [
-    { activity: 'Retainer Agreement Signed', date: '7/4/2020', status: 'Completed', assignee: 'Joanna Miles' },
-    { activity: 'Setup Mediation', date: '7/2/2020', status: 'In Progress', assignee: 'Steve Miller' },
-    { activity: 'Draft Documents', date: '6/30/2020', status: 'Overdue', assignee: 'Joe Smith' },
-  ],
-  summary: {
-    all: 3,
-    completed: 1,
-    not_completed: 2,
-    overdue: 1,
-  },
-}
+import DJANGO_PORT from '../services/setting.js';
 
 export default function MattersList() {
-  // Use embedded dummy data instead of fetching from API
-  const [data] = useState(DUMMY_DATA)
-  const { matters, summary } = data
-  
+  const [matters, setMatters] = useState([]);
+  const [summary, setSummary] = useState({
+    all: 0,
+    completed: 0,
+    not_completed: 0,
+    overdue: 0,
+  });
+  const navigate = useNavigate();
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/matters/1")
+    fetch(`${DJANGO_PORT}/api/matters/`)
       .then(response => response.json())
-      .then(data => console.log(data))
+      .then(data => {
+        setMatters(data);
+        setSummary({
+          all: data.length,
+          completed: data.filter(m => m.state === 'APPROVED').length,
+          not_completed: data.filter(m => m.state !== 'APPROVED').length,
+          overdue: 0,
+        });
+      })
       .catch(error => console.error("Error:", error));
   }, []);
+
+  const handleRowClick = (id) => {
+    navigate(`/matter/${id}`);
+  };
 
   return (
     <div className="page-bg">
@@ -33,7 +38,6 @@ export default function MattersList() {
         <div className="activities-header">
           <h2>Activities</h2>
         </div>
-
         <div className="activities-filters">
           <button className="filter-tab active">
             <span>All</span>
@@ -52,7 +56,6 @@ export default function MattersList() {
             <span className="filter-count">{summary.overdue}</span>
           </button>
         </div>
-
         <div className="activities-search-row">
           <input
             type="text"
@@ -61,7 +64,6 @@ export default function MattersList() {
             disabled
           />
         </div>
-
         <div className="activities-table-wrapper">
           <table className="activities-table">
             <thead>
@@ -76,26 +78,32 @@ export default function MattersList() {
               </tr>
             </thead>
             <tbody>
-              {matters.map((m, idx) => (
-                <tr key={idx}>
+              {matters.map((m) => (
+                <tr 
+                  key={m.id}
+                  onClick={() => handleRowClick(m.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td className="col-checkbox">
-                    <input type="checkbox" />
+                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
                   </td>
-                  <td className="col-activity">{m.activity}</td>
-                  <td className="col-date">{m.date}</td>
+                  <td className="col-activity">{m.title}</td>
+                  <td className="col-date">{new Date(m.date).toLocaleDateString()}</td>
                   <td className="col-status">
-                    {m.status === 'Completed' ? (
+                    {m.state === 'APPROVED' ? (
                       <span className="status-pill status-completed">Completed</span>
-                    ) : m.status === 'In Progress' ? (
+                    ) : m.state === 'IN_PROGRESS' ? (
                       <span className="status-pill status-in-progress">In Progress</span>
-                    ) : m.status === 'Overdue' ? (
-                      <span className="status-pill status-overdue">Overdue</span>
+                    ) : m.state === 'PENDING_APPROVAL' ? (
+                      <span className="status-pill status-overdue">Pending</span>
                     ) : (
-                      <span className="status-pill">{m.status}</span>
+                      <span className="status-pill">{m.state}</span>
                     )}
                   </td>
                   <td className="col-assignee">
-                    <a href="#" className="assignee-link">{m.assignee}</a>
+                    <a href="#" onClick={(e) => e.stopPropagation()} className="assignee-link">
+                      {m.assignee_detail?.username || '-'}
+                    </a>
                   </td>
                 </tr>
               ))}

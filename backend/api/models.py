@@ -126,6 +126,16 @@ def update_matter_transaction(matter_id, state, instance):
             MatterTransaction.objects.filter(matter_id=matter_id).update(
                 txn_approved_id=id
             )
+class Attachment(models.Model):
+    matter = models.ForeignKey(Matter, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='attachments/')
+    filename = models.CharField(max_length=255)
+    uploaded_by = models.CharField(max_length=100)
+    uploaded_at = models.DateTimeField(default=timezone.now)
+    resdb_tx_id = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return self.filename
+        
 post_save.connect(Matter.post_save, sender=Matter)
 post_init.connect(Matter.remember_state, sender=Matter)

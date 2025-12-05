@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload } from 'react-icons/tb';
+import { TbSearch, TbChevronDown, TbClipboard, TbCloudUpload, TbFile } from 'react-icons/tb';
 import SelectableList from './SelectableList.jsx';
 import styles from '../styles/MatterForm.module.css'
 import DJANGO_PORT from '../services/setting.js';
@@ -57,7 +57,6 @@ const FormInput = ({ label, value, onChange, required, readOnly = false, icon, l
             {icon}
           </div>
         )}
-
         {isPopupVisible && (
           <div className={styles.popupContainer}>
             <SelectableList
@@ -97,8 +96,10 @@ const FormSelect = ({ label, value, onChange, required, options, name }) => (
   </div>
 );
 
-const DragAndDropArea = () => {
+const DragAndDropArea = ({ matterId, onUploadSuccess }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -112,7 +113,10 @@ const DragAndDropArea = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    console.log('Files dropped:', e.dataTransfer.files);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      uploadFile(files[0]);
+    }
   };
 
   const handleBrowseClick = () => {
@@ -120,7 +124,43 @@ const DragAndDropArea = () => {
   };
 
   const handleFileChange = (e) => {
-    console.log('Files selected:', e.target.files);
+    if (e.target.files.length > 0) {
+      uploadFile(e.target.files[0]);
+    }
+  };
+
+  const uploadFile = async (file) => {
+    if (!matterId) {
+      setError('Please save the matter first before uploading attachments');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('uploaded_by', 'Current User');
+
+    try {
+      const response = await fetch(`${DJANGO_PORT}/api/matters/${matterId}/attachments/upload/`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Upload failed');
+      }
+
+      const data = await response.json();
+      console.log('Upload success:', data);
+      onUploadSuccess && onUploadSuccess(data.attachment);
+    } catch (err) {
+      setError(err.message || 'Failed to upload file');
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -133,12 +173,17 @@ const DragAndDropArea = () => {
       style={{
         borderColor: isDragging ? 'var(--color-primary)' : 'grey',
         backgroundColor: isDragging ? '#eff6ff' : 'var(--color-white)',
+        opacity: uploading ? 0.6 : 1,
+        cursor: uploading ? 'wait' : 'pointer'
       }}
     >
       <h2>Upload Attachments</h2>
       <p>Upload your files that you want to share with the record</p>
+      {error && <p style={{ color: 'red', fontSize: '0.875rem' }}>{error}</p>}
       <TbCloudUpload size={48} className={styles.dropIcon} />
-      <p className={styles.dropText}>Drag and drop here</p>
+      <p className={styles.dropText}>
+        {uploading ? 'Uploading...' : 'Drag and drop here'}
+      </p>
       <p className={styles.dropSubtext}>
         or <a className={styles.dropBrowse} onClick={(e) => { e.stopPropagation(); handleBrowseClick(); }}>browse</a>
       </p>
@@ -153,7 +198,28 @@ const DragAndDropArea = () => {
   );
 };
 
+const AttachmentsList = ({ attachments }) => {
+  if (!attachments || attachments.length === 0) {
+    return null;
+  }
 
+  return (
+    <div className={styles.attachmentsList}>
+      <h3 className={styles.attachmentsTitle}>Uploaded Attachments</h3>
+      {attachments.map((att) => (
+        <div key={att.id} className={styles.attachmentItem}>
+          <TbFile size={20} />
+          <div className={styles.attachmentInfo}>
+            <span className={styles.attachmentName}>{att.filename}</span>
+            <span className={styles.attachmentMeta}>
+              Uploaded by {att.uploaded_by} on {new Date(att.uploaded_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const App = () => {
   const { id } = useParams();
@@ -162,6 +228,7 @@ const App = () => {
   const [assignee, setAssignee] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
+  const [attachments, setAttachments] = useState([]);
 
   const handleSave = (data) => {
     data = {
@@ -193,6 +260,21 @@ const App = () => {
     setAssignee(id);
   }
 
+  const handleUploadSuccess = (newAttachment) => {
+    setAttachments((prev) => [...prev, newAttachment]);
+  };
+
+  const fetchAttachments = () => {
+    fetch(`${DJANGO_PORT}/api/matters/${id}/attachments/`)
+      .then(response => response.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAttachments(data);
+        }
+      })
+      .catch(error => console.error("Error fetching attachments:", error));
+  };
+
   useEffect(() => {
     fetch(`${DJANGO_PORT}/api/matters/${id}`)
       .then(response => response.json())
@@ -220,6 +302,8 @@ const App = () => {
         }));
       })
       .catch(error => console.error("Error fetching users:", error));
+
+    fetchAttachments();
   }, []);
 
   const handleChange = (e) => {
@@ -234,7 +318,7 @@ const App = () => {
   return (
     <>
       {showNotification && (
-        <div style={{ position: 'fixed', top: '1rem', left: '50%', zIndex: 1000  }}>
+        <div style={{ position: 'fixed', top: '1rem', left: '50%', zIndex: 1000 }}>
           <Notification
             title="Saved successfully"
             onClose={() => setShowNotification(false)}
@@ -254,14 +338,12 @@ const App = () => {
               value={formData.title}
               onChange={(e) => handleChange({ target: { name: 'title', value: e.target.value } })}
             />
-
             <FormInput
               label="Opened for"
               value={formData.client}
               onChange={(e) => handleChange({ target: { name: 'client', value: e.target.value } })}
               icon={<TbSearch size={16} />}
             />
-
             <FormSelect
               label="Type"
               name="type"
@@ -270,7 +352,6 @@ const App = () => {
               options={types}
               required
             />
-
             <FormInput
               label="Assigned to"
               value={formData.assignee}
@@ -279,7 +360,6 @@ const App = () => {
               listOptions={users}
               onSelect={handleAssigneeSelect}
             />
-
             <FormSelect
               label="State"
               name="state"
@@ -287,7 +367,6 @@ const App = () => {
               onChange={handleChange}
               options={states}
             />
-
             <FormInput
               label="Approver"
               value={formData.approver}
@@ -321,8 +400,9 @@ const App = () => {
             ></textarea>
           </div>
 
-          <DragAndDropArea />
-
+          <DragAndDropArea matterId={id} onUploadSuccess={handleUploadSuccess} />
+          
+          <AttachmentsList attachments={attachments} />
 
           <div className={styles.actionButtons}>
             <button
@@ -333,7 +413,6 @@ const App = () => {
               Save
             </button>
           </div>
-
         </div>
       </div>
     </>
