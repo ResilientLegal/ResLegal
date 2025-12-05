@@ -56,7 +56,7 @@ export default function MattersList() {
             <span className={styles['filter-count']}>{summary.not_completed}</span>
           </button>
           <button className={`${styles['filter-tab']} ${styles['overdue-tab']}`}>
-            <span>Overdue</span>
+            <span>Pending Approval</span>
             <span className={styles['filter-count']}>{summary.overdue}</span>
           </button>
         </div>
