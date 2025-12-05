@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Matter, MatterTransaction, Attachment
+from django.contrib.auth.models import User
 from .serializers import MatterSerializer, MatterTransactionSerializer, UserSerializer
 
 GRAPHQL_URL = "http://localhost:8000/graphql"
