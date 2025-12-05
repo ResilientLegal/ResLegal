@@ -59,15 +59,15 @@ const FormInput = ({ label, value, onChange, required, readOnly = false, icon, l
         )}
 
         {isPopupVisible && (
-          <div className={styles.popupContainer}>
-            <SelectableList
-              data={listOptions}
-              labelKey="label"
-              valueKey="id"
-              onSelect={handleSelection}
-            />
-          </div>
-        )}
+  <div className={styles.popupContainer}>
+    <SelectableList
+      data={listOptions}
+      labelKey="label"
+      valueKey="id"
+      onSelect={handleSelection}
+    />
+  </div>
+)}
       </div>
     </div>
   );

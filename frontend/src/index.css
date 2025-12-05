@@ -11,7 +11,7 @@
   --color-white: #ffffff;
   --color-border: #9ca3af;
   --color-border-light: #e5e7eb;
-  --color-text-dark: #1f2937;
+  --color-text-dark: #000000;
   --color-text-medium: #4b5563;
   --color-text-light: #6b7280;
   --color-read-only-bg: #f9fafb;
@@ -39,6 +39,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+    background: radial-gradient(circle at top left, #66a6ff 0, #5b5aff 35%, #7b3cff 100%);
+
 }
 
 h1 {

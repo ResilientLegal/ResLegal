@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import styles from '../styles/MattersList.module.css';
+import ChatBotWindow from '../components/ChatBotWindow';
 
 const DUMMY_DATA = {
   matters: [
@@ -13,60 +14,60 @@ const DUMMY_DATA = {
     not_completed: 2,
     overdue: 1,
   },
-}
+};
 
 export default function MattersList() {
-  // Use embedded dummy data instead of fetching from API
-  const [data] = useState(DUMMY_DATA)
-  const { matters, summary } = data
-  
+  const [data] = useState(DUMMY_DATA);
+  const { matters, summary } = data;
+
   useEffect(() => {
-    fetch("http://localhost:8000/api/matters/1")
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error("Error:", error));
+    fetch('http://localhost:8080/api/matters/')
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+      .catch((error) => console.error('Error:', error));
   }, []);
 
   return (
-    <div className="page-bg">
-      <div className="activities-card">
-        <div className="activities-header">
+    <div className={styles['page-bg']}>
+      <ChatBotWindow/>
+      <div className={styles['activities-card']}>
+        <div className={styles['activities-header']}>
           <h2>Activities</h2>
         </div>
 
-        <div className="activities-filters">
-          <button className="filter-tab active">
+        <div className={styles['activities-filters']}>
+          <button className={`${styles['filter-tab']} ${styles['active']}`}>
             <span>All</span>
-            <span className="filter-count">{summary.all}</span>
+            <span className={styles['filter-count']}>{summary.all}</span>
           </button>
-          <button className="filter-tab">
+          <button className={styles['filter-tab']}>
             <span>Completed</span>
-            <span className="filter-count">{summary.completed}</span>
+            <span className={styles['filter-count']}>{summary.completed}</span>
           </button>
-          <button className="filter-tab">
+          <button className={styles['filter-tab']}>
             <span>Not Completed</span>
-            <span className="filter-count">{summary.not_completed}</span>
+            <span className={styles['filter-count']}>{summary.not_completed}</span>
           </button>
-          <button className="filter-tab overdue-tab">
+          <button className={`${styles['filter-tab']} ${styles['overdue-tab']}`}>
             <span>Overdue</span>
-            <span className="filter-count">{summary.overdue}</span>
+            <span className={styles['filter-count']}>{summary.overdue}</span>
           </button>
         </div>
 
-        <div className="activities-search-row">
+        <div className={styles['activities-search-row']}>
           <input
             type="text"
-            className="activities-search-input"
+            className={styles['activities-search-input']}
             placeholder="Search Activities ..."
-            disabled
+            
           />
         </div>
 
-        <div className="activities-table-wrapper">
-          <table className="activities-table">
+        <div className={styles['activities-table-wrapper']}>
+          <table className={styles['activities-table']}>
             <thead>
               <tr>
-                <th className="col-checkbox">
+                <th className={styles['col-checkbox']}>
                   <input type="checkbox" disabled />
                 </th>
                 <th>Activity</th>
@@ -78,24 +79,32 @@ export default function MattersList() {
             <tbody>
               {matters.map((m, idx) => (
                 <tr key={idx}>
-                  <td className="col-checkbox">
+                  <td className={styles['col-checkbox']}>
                     <input type="checkbox" />
                   </td>
-                  <td className="col-activity">{m.activity}</td>
-                  <td className="col-date">{m.date}</td>
-                  <td className="col-status">
+                  <td className={styles['col-activity']}>{m.activity}</td>
+                  <td className={styles['col-date']}>{m.date}</td>
+                  <td className={styles['col-status']}>
                     {m.status === 'Completed' ? (
-                      <span className="status-pill status-completed">Completed</span>
+                      <span className={`${styles['status-pill']} ${styles['status-completed']}`}>
+                        Completed
+                      </span>
                     ) : m.status === 'In Progress' ? (
-                      <span className="status-pill status-in-progress">In Progress</span>
+                      <span className={`${styles['status-pill']} ${styles['status-in-progress']}`}>
+                        In Progress
+                      </span>
                     ) : m.status === 'Overdue' ? (
-                      <span className="status-pill status-overdue">Overdue</span>
+                      <span className={`${styles['status-pill']} ${styles['status-overdue']}`}>
+                        Overdue
+                      </span>
                     ) : (
-                      <span className="status-pill">{m.status}</span>
+                      <span className={styles['status-pill']}>{m.status}</span>
                     )}
                   </td>
-                  <td className="col-assignee">
-                    <a href="#" className="assignee-link">{m.assignee}</a>
+                  <td className={styles['col-assignee']}>
+                    <a href="#" className={styles['assignee-link']}>
+                      {m.assignee}
+                    </a>
                   </td>
                 </tr>
               ))}
@@ -104,5 +113,5 @@ export default function MattersList() {
         </div>
       </div>
     </div>
-  )
+  );
 }
