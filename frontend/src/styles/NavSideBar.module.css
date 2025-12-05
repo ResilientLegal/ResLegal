@@ -1,0 +1,88 @@
+.navbar {
+  width: 72px;
+  padding: 1rem 0.9rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e293b;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navbarMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.navbarFooter {
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.link {
+  width: 100%;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.link[data-active="true"] {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+.logoutLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  transition: all 150ms ease-in-out;
+}
+
+.logoutLink:hover {
+  background-color: #fef2f2;
+}
+
+.link {
+  width: 100%;
+  height: 50px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  transition: all 0.2s;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Make sure icons follow the button color */
+.link svg {
+  color: #cbd5e1;        /* default */
+}
+
+/* Active icon = white */
+.link[data-active="true"] svg {
+  color: #ffffff;
+}
