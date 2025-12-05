@@ -1,60 +1,242 @@
-/* Replicated styles from backend template (light adaptation for React app) */
-:root{
-  --bg: #f7fafc;
-  --card: #ffffff;
-  --muted: #6b7280;
-  --accent: #2563eb;
-  --danger: #ef4444;
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+/* mattersList.css */
+
+/* Reset-ish */
+* {
+  box-sizing: border-box;
 }
 
-.page-bg{
-  min-height:100vh;
-  background: var(--bg);
-  padding: 40px;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
-.activities-card{
-  width:900px;
-  background: var(--card);
-  border-radius:12px;
-  box-shadow: 0 6px 20px rgba(15,23,42,0.06);
-  padding:20px;
+/* ===== PAGE BACKGROUND ===== */
+.page-bg {
+  min-height: 100vh;
+  width: 100%;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 24px;
 }
 
-.activities-header h2{margin:0 0 12px 0; font-size:20px}
-
-.activities-filters{display:flex; gap:8px; margin-bottom:12px}
-.filter-tab{
-  background:transparent; border:1px solid rgba(15,23,42,0.06); padding:8px 12px; border-radius:8px; display:flex; gap:8px; align-items:center; cursor:pointer; color:var(--muted);
+/* ===== CARD ===== */
+.activities-card {
+  width: 960px;
+  max-width: 100%;
+  background: #f9fbff;
+  border-radius: 26px;
+  padding: 28px 32px 32px;
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.4);
 }
-.filter-tab.active{ background: rgba(37,99,235,0.08); color:var(--accent); border-color: rgba(37,99,235,0.12)}
-.filter-count{font-weight:600; margin-left:6px}
-.overdue-tab{ color: var(--danger)}
 
-.activities-search-row{ margin: 12px 0}
-.activities-search-input{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6}
+/* ===== HEADER ===== */
+.activities-header h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+}
 
-.activities-table-wrapper{ margin-top:8px; overflow:auto}
-.activities-table{ width:100%; border-collapse:collapse}
-.activities-table th, .activities-table td{ text-align:left; padding:12px 8px; border-bottom:1px solid #f1f5f9}
-.col-checkbox{ width:40px}
-.col-activity{ width:40%}
-.col-date{ width:15%}
-.col-status{ width:15%}
-.col-assignee{ width:20%}
+/* ===== FILTER TABS ===== */
+.activities-filters {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
 
-.status-pill{ padding:6px 10px; border-radius:999px; font-weight:600; font-size:13px}
-.status-completed{ background:#ecfccb; color:#166534}
-.status-in-progress{ background:#e0f2fe; color:#0369a1}
-.status-overdue{ background:#fee2e2; color:#991b1b}
+.filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background: #e5e7eb;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.08s ease;
+}
 
-.assignee-link{ color:var(--accent); text-decoration:none }
-.assignee-link:hover{ text-decoration:underline }
+.filter-tab:hover {
+  background: #e0e7ff;
+  color: #4338ca;
+  transform: translateY(-1px);
+}
 
-@media (max-width: 980px){
-  .activities-card{ width:calc(100% - 48px) }
+.filter-tab.active {
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(124, 58, 237, 0.7);
+}
+
+.overdue-tab {
+  color: #ef4444;
+}
+
+.filter-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4b5563;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== SEARCH BAR ===== */
+.activities-search-row {
+  margin-top: 18px;
+}
+
+.activities-search-input {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: #f9fafb;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  color: black;
+}
+
+.activities-search-input:focus {
+  border-color: #7c3aed;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+/* ===== TABLE WRAPPER ===== */
+.activities-table-wrapper {
+  margin-top: 22px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #eef2ff;
+}
+
+/* ===== TABLE ===== */
+.activities-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.activities-table thead {
+  background: #e0e7ff;
+}
+
+.activities-table th,
+.activities-table td {
+  padding: 12px 18px;
+  text-align: left;
+}
+
+.activities-table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.activities-table tbody tr {
+  background: #f8fafc;
+  transition: background 0.12s ease, transform 0.06s ease;
+}
+
+.activities-table tbody tr:nth-child(even) {
+  background: #eff6ff;
+}
+
+.activities-table tbody tr:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.col-checkbox {
+  width: 40px;
+}
+
+.col-activity {
+  width: 40%;
+}
+
+.col-date,
+.col-status,
+.col-assignee {
+  white-space: nowrap;
+}
+
+/* ===== STATUS PILLS ===== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.status-completed {
+  background: #16a34a;
+}
+
+.status-in-progress {
+  background: #f97316;
+}
+
+.status-overdue {
+  background: #ef4444;
+}
+
+/* ===== ASSIGNEE LINK ===== */
+.assignee-link {
+  color: #4f46e5;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.assignee-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 980px) {
+  .page-bg {
+    padding: 40px 16px;
+  }
+
+  .activities-card {
+    width: 100%;
+    padding: 24px 20px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .activities-filters {
+    gap: 6px;
+  }
+
+  .filter-tab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .activities-table th,
+  .activities-table td {
+    padding: 10px 10px;
+  }
 }

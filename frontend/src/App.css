@@ -10,7 +10,6 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background-color: white;
 }
 
 .app-content {
