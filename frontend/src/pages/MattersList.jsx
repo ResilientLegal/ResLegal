@@ -1,29 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from '../styles/MattersList.module.css';
 import ChatBotWindow from '../components/ChatBotWindow';
 
-const DUMMY_DATA = {
-  matters: [
-    { activity: 'Retainer Agreement Signed', date: '7/4/2020', status: 'Completed', assignee: 'Joanna Miles' },
-    { activity: 'Setup Mediation', date: '7/2/2020', status: 'In Progress', assignee: 'Steve Miller' },
-    { activity: 'Draft Documents', date: '6/30/2020', status: 'Overdue', assignee: 'Joe Smith' },
-  ],
-  summary: {
-    all: 3,
-    completed: 1,
-    not_completed: 2,
-    overdue: 1,
-  },
-};
-
 export default function MattersList() {
-  const [data] = useState(DUMMY_DATA);
-  const { matters, summary } = data;
+  const [matters, setMatters] = useState([])
+  const [summary, setSummary] = useState({})
+  const navigate = useNavigate();
+  
+  const handleRowClick = (matterId) => {
+        const targetUrl = `/matter/${matterId}`; 
+        navigate(targetUrl);
+  };
 
   useEffect(() => {
     fetch('http://localhost:8080/api/matters/')
       .then((response) => response.json())
-      .then((data) => console.log(data))
+      .then((data) => {
+        console.log(data)
+        const mattersTrans = data.map(m => {
+          return {
+            id: m.id,
+            activity: m.title,
+            date: new Date(m.date).toLocaleDateString(),
+            status: m.state.toLowerCase() .replace('_', ' ').split(' ')
+                           .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            assignee: m.assignee_detail?.username
+          }
+        });
+        
+        setMatters(mattersTrans);
+      })
       .catch((error) => console.error('Error:', error));
   }, []);
 
@@ -49,7 +56,7 @@ export default function MattersList() {
             <span className={styles['filter-count']}>{summary.not_completed}</span>
           </button>
           <button className={`${styles['filter-tab']} ${styles['overdue-tab']}`}>
-            <span>Overdue</span>
+            <span>Pending Approval</span>
             <span className={styles['filter-count']}>{summary.overdue}</span>
           </button>
         </div>
@@ -77,25 +84,25 @@ export default function MattersList() {
               </tr>
             </thead>
             <tbody>
-              {matters.map((m, idx) => (
-                <tr key={idx}>
+              {matters.map((m) => (
+                <tr key={m.id} onClick={() => handleRowClick(m.id)}>
                   <td className={styles['col-checkbox']}>
                     <input type="checkbox" />
                   </td>
                   <td className={styles['col-activity']}>{m.activity}</td>
                   <td className={styles['col-date']}>{m.date}</td>
                   <td className={styles['col-status']}>
-                    {m.status === 'Completed' ? (
+                    {m.status === 'Approved' ? (
                       <span className={`${styles['status-pill']} ${styles['status-completed']}`}>
-                        Completed
+                        Approved
                       </span>
                     ) : m.status === 'In Progress' ? (
                       <span className={`${styles['status-pill']} ${styles['status-in-progress']}`}>
                         In Progress
                       </span>
-                    ) : m.status === 'Overdue' ? (
+                    ) : m.status === 'Pending Approval' ? (
                       <span className={`${styles['status-pill']} ${styles['status-overdue']}`}>
-                        Overdue
+                        Pending approval
                       </span>
                     ) : (
                       <span className={styles['status-pill']}>{m.status}</span>
