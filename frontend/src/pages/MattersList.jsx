@@ -1,42 +1,41 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/MattersList.module.css';
 import ChatBotWindow from '../components/ChatBotWindow';
+import DJANGO_PORT from '../services/setting.js';
 
 export default function MattersList() {
-  const [matters, setMatters] = useState([])
-  const [summary, setSummary] = useState({})
+  const [matters, setMatters] = useState([]);
+  const [summary, setSummary] = useState({
+    all: 0,
+    completed: 0,
+    not_completed: 0,
+    overdue: 0,
+  });
   const navigate = useNavigate();
-  
-  const handleRowClick = (matterId) => {
-        const targetUrl = `/matter/${matterId}`; 
-        navigate(targetUrl);
-  };
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/matters/')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data)
-        const mattersTrans = data.map(m => {
-          return {
-            id: m.id,
-            activity: m.title,
-            date: new Date(m.date).toLocaleDateString(),
-            status: m.state.toLowerCase() .replace('_', ' ').split(' ')
-                           .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-            assignee: m.assignee_detail?.username
-          }
+    fetch(`${DJANGO_PORT}/api/matters/`)
+      .then(response => response.json())
+      .then(data => {
+        setMatters(data);
+        setSummary({
+          all: data.length,
+          completed: data.filter(m => m.state === 'APPROVED').length,
+          not_completed: data.filter(m => m.state !== 'APPROVED').length,
+          overdue: data.filter(m => m.state === 'PENDING_APPROVAL').length,
         });
-        
-        setMatters(mattersTrans);
       })
-      .catch((error) => console.error('Error:', error));
+      .catch(error => console.error('Error:', error));
   }, []);
+
+  const handleRowClick = (id) => {
+    navigate(`/matter/${id}`);
+  };
 
   return (
     <div className={styles['page-bg']}>
-      <ChatBotWindow/>
+      <ChatBotWindow />
       <div className={styles['activities-card']}>
         <div className={styles['activities-header']}>
           <h2>Activities</h2>
@@ -66,7 +65,6 @@ export default function MattersList() {
             type="text"
             className={styles['activities-search-input']}
             placeholder="Search Activities ..."
-            
           />
         </div>
 
@@ -85,32 +83,43 @@ export default function MattersList() {
             </thead>
             <tbody>
               {matters.map((m) => (
-                <tr key={m.id} onClick={() => handleRowClick(m.id)}>
+                <tr 
+                  key={m.id}
+                  onClick={() => handleRowClick(m.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <td className={styles['col-checkbox']}>
-                    <input type="checkbox" />
+                    <input 
+                      type="checkbox" 
+                      onClick={(e) => e.stopPropagation()} 
+                    />
                   </td>
-                  <td className={styles['col-activity']}>{m.activity}</td>
-                  <td className={styles['col-date']}>{m.date}</td>
+                  <td className={styles['col-activity']}>{m.title}</td>
+                  <td className={styles['col-date']}>{new Date(m.date).toLocaleDateString()}</td>
                   <td className={styles['col-status']}>
-                    {m.status === 'Approved' ? (
+                    {m.state === 'APPROVED' ? (
                       <span className={`${styles['status-pill']} ${styles['status-completed']}`}>
-                        Approved
+                        Completed
                       </span>
-                    ) : m.status === 'In Progress' ? (
+                    ) : m.state === 'IN_PROGRESS' ? (
                       <span className={`${styles['status-pill']} ${styles['status-in-progress']}`}>
                         In Progress
                       </span>
-                    ) : m.status === 'Pending Approval' ? (
+                    ) : m.state === 'PENDING_APPROVAL' ? (
                       <span className={`${styles['status-pill']} ${styles['status-overdue']}`}>
-                        Pending approval
+                        Pending Approval
                       </span>
                     ) : (
-                      <span className={styles['status-pill']}>{m.status}</span>
+                      <span className={styles['status-pill']}>{m.state}</span>
                     )}
                   </td>
                   <td className={styles['col-assignee']}>
-                    <a href="#" className={styles['assignee-link']}>
-                      {m.assignee}
+                    <a 
+                      href="#" 
+                      onClick={(e) => e.stopPropagation()} 
+                      className={styles['assignee-link']}
+                    >
+                      {m.assignee_detail?.username || '-'}
                     </a>
                   </td>
                 </tr>
