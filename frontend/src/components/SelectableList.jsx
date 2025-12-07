@@ -28,7 +28,7 @@ export default function SelectableList({
         padding: '8px 8px 6px',
         maxHeight: '260px',
         overflowY: 'auto',
-        backgroundColor: 'white',
+        backgroundColor: '#1e293b',
         borderRadius: '8px',
       }}
     >
@@ -55,7 +55,7 @@ export default function SelectableList({
           style={{
             padding: '8px',
             fontSize: '13px',
-            color: '#9ca3af',
+            color: '#1d2025ff',
           }}
         >
           No results
@@ -81,7 +81,7 @@ export default function SelectableList({
                 transition: 'background-color 0.12s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f3f4ff';
+                e.currentTarget.style.backgroundColor = '#17181dff';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';

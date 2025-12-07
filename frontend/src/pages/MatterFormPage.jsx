@@ -9,7 +9,7 @@ const MatterFormPage = () => {
     return (
         <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", height: "100%"  }}>
             <MatterForm />
-            <div style={{ marginTop: "70px", width: "300px" }}>
+            <div style={{ paddingLeft: "2rem" ,marginTop: "70px", width: "300px" }}>
                 <TimeLine matterId={id} />
             </div>
         </div>

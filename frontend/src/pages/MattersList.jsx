@@ -1,31 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TbFilter, TbSearch, TbListCheck, TbCalendar } from 'react-icons/tb';
 import styles from '../styles/MattersList.module.css';
 import ChatBotWindow from '../components/ChatBotWindow';
 
-const DUMMY_DATA = {
-  matters: [
-    { activity: 'Retainer Agreement Signed', date: '7/4/2020', status: 'Completed', assignee: 'Joanna Miles' },
-    { activity: 'Setup Mediation', date: '7/2/2020', status: 'In Progress', assignee: 'Steve Miller' },
-    { activity: 'Draft Documents', date: '6/30/2020', status: 'Overdue', assignee: 'Joe Smith' },
-  ],
-  summary: {
-    all: 3,
-    completed: 1,
-    not_completed: 2,
-    overdue: 1,
-  },
-};
-
 export default function MattersList() {
-  const [data] = useState(DUMMY_DATA);
-  const { matters, summary } = data;
+  const [matters, setMatters] = useState([])
+  const [summary, setSummary] = useState({})
+  const navigate = useNavigate();
+  
+  const handleRowClick = (matterId) => {
+        const targetUrl = `/matter/${matterId}`; 
+        navigate(targetUrl);
+  };
 
-  useEffect(() => {
+   useEffect(() => {
     fetch('http://localhost:8080/api/matters/')
       .then((response) => response.json())
-      .then((data) => console.log(data))
+      .then((data) => {
+        const mattersTrans = data.map(m => {
+          return {
+            id: m.id,
+            activity: m.title,
+            date: new Date(m.date).toLocaleDateString(),
+            status: m.state.toLowerCase() .replace('_', ' ').split(' ')
+                           .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            assignee: m.assignee_detail?.username
+          }
+        });
+        
+        setMatters(mattersTrans);
+      })
       .catch((error) => console.error('Error:', error));
   }, []);
 
@@ -58,17 +63,17 @@ export default function MattersList() {
             <span className={styles.snapshotHint}>Total tracked</span>
           </div>
           <div className={styles.snapshotCard}>
-            <p className={styles.snapshotLabel}>Completed</p>
+            <p className={styles.snapshotLabel}>Approved</p>
             <p className={styles.snapshotValue}>{summary.completed}</p>
             <span className={styles.snapshotHint}>Filed/closed</span>
           </div>
           <div className={styles.snapshotCard}>
-            <p className={styles.snapshotLabel}>In flight</p>
+            <p className={styles.snapshotLabel}>In Progress</p>
             <p className={styles.snapshotValue}>{summary.not_completed}</p>
             <span className={styles.snapshotHint}>In progress</span>
           </div>
           <div className={styles.snapshotCard}>
-            <p className={styles.snapshotLabel}>Overdue</p>
+            <p className={styles.snapshotLabel}>Pending Approval</p>
             <p className={styles.snapshotValue}>{summary.overdue}</p>
             <span className={styles.snapshotHint}>Needs attention</span>
           </div>
@@ -115,8 +120,8 @@ export default function MattersList() {
               </tr>
             </thead>
             <tbody>
-              {matters.map((m, idx) => (
-                <tr key={idx}>
+              {matters.map((m) => (
+                <tr key={m.id} onClick={() => handleRowClick(m.id)}>
                   <td className={styles.colCheckbox}>
                     <input type="checkbox" />
                   </td>
@@ -125,11 +130,11 @@ export default function MattersList() {
                   <td className={styles.colStatus}>
                     <span
                       className={`${styles.statusPill} ${
-                        m.status === 'Completed'
+                        m.status === 'Approved'
                           ? styles.statusCompleted
                           : m.status === 'In Progress'
                           ? styles.statusInProgress
-                          : m.status === 'Overdue'
+                          : m.status === 'Pending Approval'
                           ? styles.statusOverdue
                           : ''
                       }`}

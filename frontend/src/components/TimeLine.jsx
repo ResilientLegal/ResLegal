@@ -6,6 +6,7 @@ import '@mantine/core/styles/default-css-variables.css';
 import '@mantine/core/styles/Timeline.css';
 import { useEffect, useState } from 'react';
 import { fetchTransactionById } from '../services/Transactions.js';
+import styles from '../styles/TimeLine.module.css'
 
 
 const formatTimeAgo = (utcTimestamp) => {
@@ -15,6 +16,11 @@ const formatTimeAgo = (utcTimestamp) => {
   }
 
   const pastTime = new Date(utcTimestamp);
+
+  if (!utcTimestamp) {
+    return null;
+  }
+
   const now = new Date();
 
   const diffInMilliseconds = now.getTime() - pastTime.getTime();
@@ -119,17 +125,17 @@ const TimeLine = ({ matterId }) => {
             <div>
               <h3 style={{ textAlign: "center" }}>Matter Timeline</h3>
 
-              <Timeline active={Object.keys(timestamps).length - 1} bulletSize={40} lineWidth={2} color='blue' align="left">
+              <Timeline active={Object.keys(timestamps).length - 1} bulletSize={40} lineWidth={2} color='blue' align="left" styles={{ itemTitle: { color: 'white' }, itemBody: {color: 'white'} }}>
                 <Timeline.Item bullet={<TbFileDescription size={32} />} title="In Progress">
                   <Text c="dimmed" size="sm">Matter was created</Text>
                   <Text size="xs" mt={4}>{timestamps.in_progress}</Text>
                 </Timeline.Item>
 
-                <Timeline.Item bullet={<MdOutlinePendingActions size={32} />} title="Approval requested">
+                <Timeline.Item bullet={<MdOutlinePendingActions size={32} styles={styles.itemHeader} />} title="Approval requested">
                   <Text c="dimmed" size="sm">Matter has been submitted for approval</Text>
                   <Text size="xs" mt={4}>{timestamps.pending_approval}</Text>
                 </Timeline.Item>
-                <Timeline.Item bullet={<TbCircleCheck size={32} />} title="Approved" lineVariant="dashed">
+                <Timeline.Item bullet={<TbCircleCheck size={32} styles={styles.itemHeader} />} title="Approved" lineVariant="dashed">
                   <Text c="dimmed" size="sm">Matter was approved</Text>
                   <Text size="xs" mt={4}>{timestamps.approved}</Text>
                 </Timeline.Item>
